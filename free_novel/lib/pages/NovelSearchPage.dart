@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:novel/model/BiqugeSearch.dart';
+import 'package:novel/base/BaseSearch.dart';
+import 'package:novel/base/SearchFactory.dart';
 import 'package:novel/model/SearchBookResult.dart';
-import 'package:novel/model/HtmlParse.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:async';
 
 class NovelSearchPage extends StatefulWidget {
   @override
@@ -15,9 +14,11 @@ class NovelSearchState extends State<NovelSearchPage> {
   final _textController = TextEditingController();
   String _result = "";
   List<SearchBookResult> _resultList = [];
+  BaseSearch _search;
 
   @override
   void initState() {
+    _search = SearchFactory.getSearch(SearchFactory.BIQUGE);
     super.initState();
   }
 
@@ -146,7 +147,7 @@ class NovelSearchState extends State<NovelSearchPage> {
   doSearch() {
     onSearchResult("");
     //print("Search for ${_textController.text}");
-    BiqugeSearch.doSearch(_textController.text, success: (data) {
+    _search.doSearch(_textController.text, success: (data) {
       onSearchResult(data.toString());
     }, error: (type) {
       print("error type:$type");
@@ -162,7 +163,7 @@ class NovelSearchState extends State<NovelSearchPage> {
       });
       return;
     }
-    var resultList = await compute(HtmlParse.parseResult, result);
+    var resultList = await compute(_search.parseResult, result);
     print("resultList:$resultList");
     setState(() {
       _result = result;
