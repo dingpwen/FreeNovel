@@ -125,14 +125,20 @@ class NovelSearchState extends State<NovelSearchPage> {
                 imageUrl: item.bookCover),
           ),
           Expanded(
+            flex:3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(item.bookName),
-                Text(item.author),
-                Text(item.bookDesc, maxLines: 2, overflow:TextOverflow.ellipsis),
-                Text(item.lastTitle),
+                Text("作者：${item.author}"),
+                Text("简介：${item.bookDesc}", maxLines: 2, overflow:TextOverflow.ellipsis),
+                Text("最新章节：${item.lastTitle}"),
               ],
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: FlatButton(onPressed: () => downloadItem(item), child: Text("下载收藏")),
             ),
           )
         ],
@@ -155,7 +161,6 @@ class NovelSearchState extends State<NovelSearchPage> {
   }
 
   onSearchResult(String result) async {
-    print("result:$result");
     if (result.length == 0) {
       //显示 正在搜索...
       setState(() {
@@ -163,12 +168,23 @@ class NovelSearchState extends State<NovelSearchPage> {
       });
       return;
     }
-    var resultList = await compute(_search.parseResult, result);
+    var resultList = await _search.parseResult(result);
     print("resultList:$resultList");
     setState(() {
       _result = result;
       _resultList = resultList;
     });
+  }
+
+  downloadItem(SearchBookResult item) {
+    //compute(download, [_search, item.bookUrl]);
+    _search.downloadItem(item.bookUrl);
+  }
+
+  static void download(List<dynamic> params) async{
+    BaseSearch search = params[0];
+    String url = params[1];
+    await search.downloadItem(url);
   }
 }
 

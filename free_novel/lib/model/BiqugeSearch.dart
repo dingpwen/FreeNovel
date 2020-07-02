@@ -17,10 +17,14 @@ class BiqugeSearch extends BaseSearch{
     return _BASE_URL;
   }
 
+  @override
+  String getBaseUrl(){
+    return "https://www.xsbiquge.com";
+  }
+
   Future<dynamic> parseResult(String response) async {
     var document = parse(response);
-    var content = document.querySelector('.result-list');
-    List<Element> books = content.querySelectorAll(".result-item");
+    List<Element> books = document.querySelectorAll(".result-item");
     List<SearchBookResult> data = [];
     if(books.isNotEmpty){
       data = List.generate(books.length, (i){
@@ -40,5 +44,30 @@ class BiqugeSearch extends BaseSearch{
       });
     }
     return data;
+  }
+
+  @override
+  Map<String, dynamic> getItemParams(){
+    return {BaseSearch.ITEM_ID: "list", BaseSearch.ITEM_PATH:"dl>dd>a"};
+  }
+
+  @override
+  dynamic parseItemContent(Element element){
+    String url = element.attributes['href'].trim();
+    String content = element.text.trim();
+    return {BaseSearch.ITEM_URL:url, BaseSearch.ITEM_TITLE:content};;
+  }
+
+  @override
+  Map<String, dynamic> getContentParams(){
+    return {BaseSearch.ITEM_ID: "content"};
+  }
+
+  @override
+  dynamic parseContent(Element element){
+    String content = element.text.trim().replaceAll("&nbsp;", "");
+    content = content.replaceAll("&nbsp;", "");
+    content = content.replaceAll("<br><br>", "\n");
+    return content;
   }
 }

@@ -23,7 +23,12 @@ class DioHelper{
       {params, Function(T t) success, Function(int errorType) error}) async {
     final dio = _createInstance();
     try {
-      final response = await dio.request(url, queryParameters: params);
+      Response response;
+      if(params == null) {
+        response = await dio.request(url);
+      } else {
+        response = await dio.request(url, queryParameters: params);
+      }
       if (response.statusCode == 200) {
         if (success != null) {
           success(response.data);
