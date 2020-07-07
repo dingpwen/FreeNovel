@@ -57,9 +57,9 @@ class NovelDatabase {
   Future<dynamic> getNovelContent(int id, int page) async {
     final Database db = await database;
     List<Map<String, dynamic>> result = await db.rawQuery(
-        "select content from novel where id=? and page=?", [id, page]);
+        "select * from novel where id=? and page=?", [id, page]);
     if (result != null && result.length > 0) {
-      return result[0]['content'];
+      return Novel.fromJson(result[0]);
     }
     return null;
   }

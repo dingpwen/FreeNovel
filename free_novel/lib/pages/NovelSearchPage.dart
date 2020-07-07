@@ -203,21 +203,3 @@ class NovelSearchState extends State<NovelSearchPage> {
     await search.downloadItem(url);
   }*/
 }
-
-/*
-new CustomScrollView(
-shrinkWrap: true,
-// 内容
-slivers: <Widget>[
-new SliverPadding(
-padding: const EdgeInsets.all(20.0),
-sliver: new SliverList(
-delegate: new SliverChildListDelegate(
-<Widget>[
-new Text(_result),
-],
-),
-),
-),
-],
-)*/

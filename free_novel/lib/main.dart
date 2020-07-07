@@ -75,10 +75,10 @@ class BookListState extends State<BookListPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: null,),
-        title: new Text("�ҵ�˽�����"), centerTitle:true,
+        title: new Text("我的私人书库"), centerTitle:true,
         actions: <Widget>[IconButton(icon: Icon(Icons.search), onPressed: goSearch)],
       ),
-      body: (_books.length == 0)?Center(child:Text("û���ղ��κ��鼮")):_buildBooksListView(context),
+      body: (_books.length == 0)?Center(child:Text("没有收藏任何书籍")):_buildBooksListView(context),
     );
   }
 
@@ -115,9 +115,9 @@ class BookListState extends State<BookListPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(book.bookName),
-                  Text("���ߣ�${book.author}"),
-                  Text("��飺${book.bookDesc}", maxLines: 2, overflow:TextOverflow.ellipsis),
-                  Text("�����½ڣ�${book.lastTitle}"),
+                  Text("作者：${book.author}"),
+                  Text("简介：${book.bookDesc}", maxLines: 2, overflow:TextOverflow.ellipsis),
+                  Text("最新章节：${book.lastTitle}"),
                 ],
               ),
             ),
