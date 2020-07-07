@@ -1,7 +1,7 @@
-import 'package:novel/base/BaseSearch.dart';
+import 'package:novel/search/BaseSearch.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
-import 'package:novel/model/SearchBookResult.dart';
+import 'package:novel/db/BookDesc.dart';
 
 class BiqugeSearch extends BaseSearch{
   static const _BASE_URL = "https://www.xsbiquge.com/search.php";
@@ -25,13 +25,13 @@ class BiqugeSearch extends BaseSearch{
   Future<dynamic> parseResult(String response) async {
     var document = parse(response);
     List<Element> books = document.querySelectorAll(".result-item");
-    List<SearchBookResult> data = [];
+    List<BookDesc> data = [];
     if(books.isNotEmpty){
       data = List.generate(books.length, (i){
         var detail = books[i].querySelector('.result-game-item-detail');
         var itemInfo = detail.querySelector(".result-game-item-info");
         List<Element> infos = itemInfo.querySelectorAll('.result-game-item-info-tag');
-        return SearchBookResult(
+        return BookDesc(
             detail.querySelectorAll('.result-item-title>a>span')[0].text.trim(),
             detail.querySelector('.result-item-title>a').attributes['href'].trim(),
             infos[0].querySelectorAll('span')[1].text.trim(),
@@ -55,7 +55,7 @@ class BiqugeSearch extends BaseSearch{
   dynamic parseItemContent(Element element){
     String url = element.attributes['href'].trim();
     String content = element.text.trim();
-    return {BaseSearch.ITEM_URL:url, BaseSearch.ITEM_TITLE:content};;
+    return {BaseSearch.ITEM_URL:url, BaseSearch.ITEM_TITLE:content};
   }
 
   @override
@@ -66,8 +66,8 @@ class BiqugeSearch extends BaseSearch{
   @override
   dynamic parseContent(Element element){
     String content = element.text.trim().replaceAll("&nbsp;", "");
-    content = content.replaceAll("&nbsp;", "");
-    content = content.replaceAll("<br><br>", "\n");
+    //content = content.replaceAll("&nbsp;", "");
+    //content = content.replaceAll("<br><br>", "\\n");
     return content;
   }
 }

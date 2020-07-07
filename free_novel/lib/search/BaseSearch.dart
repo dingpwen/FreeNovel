@@ -1,3 +1,5 @@
+import 'package:novel/db/Novel.dart';
+import 'package:novel/db/NovelDatabase.dart';
 import "package:novel/utils/DioHelper.dart";
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
@@ -22,7 +24,7 @@ abstract class BaseSearch {
 
   Future<dynamic> parseResult(String response);
 
-  downloadItem(String url) async {
+  downloadItem(String url, final int novelId) async {
     if (url.isEmpty || _downloadUrls.contains(url)) {
       return;
     }
@@ -30,7 +32,7 @@ abstract class BaseSearch {
     print("downloadItem:$url");
     DioHelper.doGet(url, params: null, success: (response){
       print("response:$response");
-      parseItem(response);
+      parseItem(response, novelId);
       _downloadUrls.remove(url);
     }, error: (errorType) {
       print("errorType:$errorType");
@@ -63,29 +65,32 @@ abstract class BaseSearch {
   dynamic parseItemContent(Element element);
   String getBaseUrl();
 
-  Future<dynamic> parseItem(String response) async{
+  Future<dynamic> parseItem(String response, final int novelId) async{
     final itemParams = getItemParams();
     List<Element> lists = _getTargetElement(response, itemParams);
     List<Map<String, String>> items = [];
     items = List.generate(lists.length, (i){
       return parseItemContent(lists[i]);
     });
-    print("Items:${items}");
+    print("Items:$items");
+    int page = 0;
     items.forEach((element) {
       String url = getBaseUrl() + element[ITEM_URL];
-      downloadContent(url);
+      downloadContent(url, novelId, page++, element[ITEM_TITLE]);
     });
     return items;
   }
 
-  downloadContent(String url) async {
+  downloadContent(String url, final int novelId, final int page, final String title) async {
     if (url.isEmpty || _downloadUrls.contains(url)) {
       return;
     }
+    final novel = Novel(id:novelId, page:page, title:title, content: "", url:url);
+    await NovelDatabase.getInstance().insertNovel(novel);
     _downloadUrls.add(url);
     print("downloadContent:$url");
     DioHelper.doGet(url, params: null, success: (response){
-      parseContentResponse(response);
+      parseContentResponse(response, novelId, page);
       _downloadUrls.remove(url);
     }, error: (errorType) {
       _downloadUrls.remove(url);
@@ -95,11 +100,12 @@ abstract class BaseSearch {
   Map<String, dynamic> getContentParams();
   dynamic parseContent(Element element);
 
-  Future<dynamic> parseContentResponse(String response) async{
+  Future<dynamic> parseContentResponse(String response, final int novelId, final int page) async{
     final params = getContentParams();
     Element element = _getTargetElement(response, params)[0];
     dynamic content = parseContent(element);
-    print("content:$content");
+    //print("content:$content");
+    NovelDatabase.getInstance().updateNovelContent(novelId, page, content);
     return content;
   }
 }

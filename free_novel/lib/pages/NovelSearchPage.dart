@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:novel/base/BaseSearch.dart';
-import 'package:novel/base/SearchFactory.dart';
-import 'package:novel/model/SearchBookResult.dart';
+import 'package:novel/db/NovelDatabase.dart';
+import 'package:novel/search/BaseSearch.dart';
+import 'package:novel/search/SearchFactory.dart';
+import 'package:novel/db/BookDesc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class NovelSearchPage extends StatefulWidget {
@@ -13,8 +13,9 @@ class NovelSearchPage extends StatefulWidget {
 class NovelSearchState extends State<NovelSearchPage> {
   final _textController = TextEditingController();
   String _result = "";
-  List<SearchBookResult> _resultList = [];
+  List<BookDesc> _resultList = [];
   BaseSearch _search;
+  int refresh = 0;
 
   @override
   void initState() {
@@ -25,45 +26,50 @@ class NovelSearchState extends State<NovelSearchPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios),
-            onPressed: goBack,
-          ),
-          title: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: 36),
-            child: TextField(
-              controller: _textController,
-              textAlignVertical: TextAlignVertical.center,
-              decoration: InputDecoration(
-                  contentPadding: EdgeInsets.all(10.0),
-                  hintText: '请输入要搜索的小说',
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: const OutlineInputBorder(
-                      borderRadius:
-                          const BorderRadius.all(const Radius.circular(18)))),
-              cursorColor: Colors.blueGrey,
-              cursorWidth: 2,
-              cursorRadius: Radius.elliptical(2, 8),
-              style: TextStyle(color: Colors.red, fontSize: 16),
+    return WillPopScope(
+      child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios),
+              onPressed: goBack,
             ),
+            title: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: 36),
+              child: TextField(
+                controller: _textController,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                    contentPadding: EdgeInsets.all(10.0),
+                    hintText: '请输入要搜索的小说',
+                    hintStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                    fillColor: Colors.white,
+                    filled: true,
+                    border: const OutlineInputBorder(
+                        borderRadius:
+                            const BorderRadius.all(const Radius.circular(18)))),
+                cursorColor: Colors.blueGrey,
+                cursorWidth: 2,
+                cursorRadius: Radius.elliptical(2, 8),
+                style: TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            ),
+            centerTitle: true,
+            actions: <Widget>[
+              IconButton(icon: Icon(Icons.search), onPressed: doSearch)
+            ],
           ),
-          centerTitle: true,
-          actions: <Widget>[
-            IconButton(icon: Icon(Icons.search), onPressed: doSearch)
-          ],
-        ),
-        body: (_result == "")
-            ? Center(
-                child: Text("Searching..."),
-              )
-            : _buildSearchResultView());
+          body: (_result == "")
+              ? Center(
+                  child: Text("Searching..."),
+                )
+              : _buildSearchResultView()),
+      onWillPop: (){
+        goBack();
+      },
+    );
   }
 
   _buildSearchResultView() {
@@ -83,23 +89,20 @@ class NovelSearchState extends State<NovelSearchPage> {
                   child: Text(
                     "搜索结果：",
                     style: TextStyle(fontSize: 18, color: Colors.black),
-                  )
-              ),
+                  )),
             )
           ],
         ),
         Expanded(
           child: Container(
               margin: EdgeInsets.fromLTRB(20, 0, 20, 10),
-              child: _buildSearchListView()
-          ),
+              child: _buildSearchListView()),
         )
-
       ],
     );
   }
 
-  _buildSearchListView() {
+  Widget _buildSearchListView() {
     return ListView.separated(
         itemBuilder: (context, index) {
           return _buildSearchItemView(context, _resultList[index]);
@@ -113,32 +116,36 @@ class NovelSearchState extends State<NovelSearchPage> {
         itemCount: _resultList.length);
   }
 
-  Widget _buildSearchItemView(BuildContext context, SearchBookResult item) {
+  Widget _buildSearchItemView(BuildContext context, BookDesc item) {
     return Container(
-      margin: EdgeInsets.only(top:10, bottom: 10),
+      margin: EdgeInsets.only(top: 10, bottom: 10),
       child: Row(
         children: <Widget>[
           Container(
             height: 120,
             width: 80,
             child: CachedNetworkImage(
+                placeholder: (context, string) =>
+                    Image.asset("lib/images/nopage.jpg"),
                 imageUrl: item.bookCover),
           ),
           Expanded(
-            flex:3,
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(item.bookName),
                 Text("作者：${item.author}"),
-                Text("简介：${item.bookDesc}", maxLines: 2, overflow:TextOverflow.ellipsis),
+                Text("简介：${item.bookDesc}",
+                    maxLines: 2, overflow: TextOverflow.ellipsis),
                 Text("最新章节：${item.lastTitle}"),
               ],
             ),
           ),
           Expanded(
             child: Center(
-              child: FlatButton(onPressed: () => downloadItem(item), child: Text("下载收藏")),
+              child: FlatButton(
+                  onPressed: () => downloadItem(item), child: Text("下载收藏")),
             ),
           )
         ],
@@ -147,12 +154,12 @@ class NovelSearchState extends State<NovelSearchPage> {
   }
 
   goBack() {
-    Navigator.pop(context);
+    Navigator.pop(context, [refresh]);
   }
 
   doSearch() {
     onSearchResult("");
-    //print("Search for ${_textController.text}");
+    print("Search for ${_textController.text}");
     _search.doSearch(_textController.text, success: (data) {
       onSearchResult(data.toString());
     }, error: (type) {
@@ -161,6 +168,7 @@ class NovelSearchState extends State<NovelSearchPage> {
   }
 
   onSearchResult(String result) async {
+    print("result:$result");
     if (result.length == 0) {
       //显示 正在搜索...
       setState(() {
@@ -176,16 +184,24 @@ class NovelSearchState extends State<NovelSearchPage> {
     });
   }
 
-  downloadItem(SearchBookResult item) {
+  downloadItem(BookDesc book) async {
     //compute(download, [_search, item.bookUrl]);
-    _search.downloadItem(item.bookUrl);
+    final exist =
+        await NovelDatabase.getInstance().findBookFromUrl(book.bookUrl);
+    if (exist != null) {
+      //showToast();
+      return;
+    }
+    int id = await NovelDatabase.getInstance().insertBook(book);
+    refresh = 1;
+    _search.downloadItem(book.bookUrl, id);
   }
 
-  static void download(List<dynamic> params) async{
+  /*static void download(List<dynamic> params) async{
     BaseSearch search = params[0];
     String url = params[1];
     await search.downloadItem(url);
-  }
+  }*/
 }
 
 /*

@@ -1,5 +1,4 @@
 import "package:dio/dio.dart";
-import "dart:async";
 
 class DioHelper{
   static const ERROR_TYPE_NET = -1;

@@ -1,5 +1,5 @@
-import 'package:novel/base/BaseSearch.dart';
-import 'package:novel/model/BiqugeSearch.dart';
+import 'package:novel/search/BaseSearch.dart';
+import 'package:novel/search/BiqugeSearch.dart';
 
 class SearchFactory{
   static const BIQUGE = "biquge";
