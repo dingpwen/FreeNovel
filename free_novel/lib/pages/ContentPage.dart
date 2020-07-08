@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:novel/db/Novel.dart';
 import 'package:novel/db/NovelDatabase.dart';
+import 'package:novel/utils/SpUtils.dart';
 
 class ContentPage extends StatefulWidget{
   ContentPage({this.arguments});
@@ -35,6 +36,7 @@ class ContentState extends State<ContentPage>{
   loadContent() async{
     final novel = await NovelDatabase.getInstance().getNovelContent(_id, page);
     //print("content:$content");
+    SpUtils.savePage(_id, page);
     setState(() {
       _novel = novel;
       //_content = content;//.replaceAll("<br><br>", "\n");

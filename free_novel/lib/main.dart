@@ -2,8 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:novel/db/BookDesc.dart';
 import 'package:novel/db/NovelDatabase.dart';
+import 'package:novel/pages/ContentPage.dart';
 import 'package:novel/pages/NovelSearchPage.dart';
 import 'package:novel/pages/CataloguePage.dart';
+import 'package:novel/utils/SpUtils.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,9 +16,9 @@ const String catalogueRoute = 'CataloguePage';
 
 class MyApp extends StatelessWidget {
   final routes = {
-    "BookList":(buildContext) => BookListPage(),
-    searchRoute:(buildContext) => NovelSearchPage(),
-    catalogueRoute:(buildContext, {arguments}) => CataloguePage(arguments),
+    "BookList": (buildContext) => BookListPage(),
+    searchRoute: (buildContext) => NovelSearchPage(),
+    catalogueRoute: (buildContext, {arguments}) => CataloguePage(arguments),
   };
   // This widget is the root of your application.
   @override
@@ -52,6 +54,7 @@ class BookListPage extends StatefulWidget {
 
 class BookListState extends State<BookListPage> {
   List<BookDesc> _books = [];
+  int _curIndex = -1;
 
   @override
   void initState() {
@@ -59,12 +62,13 @@ class BookListState extends State<BookListPage> {
     loadData();
   }
 
-  loadData() async{
+  loadData() async {
     final bookList = await NovelDatabase.getInstance().findAllBooks();
     bookList.forEach((element) {
       print("book id:${element.id}, name: ${element.bookName}");
     });
     setState(() {
+      _curIndex = -1;
       _books = bookList;
     });
   }
@@ -74,18 +78,26 @@ class BookListState extends State<BookListPage> {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: null,),
-        title: new Text("我的私人书库"), centerTitle:true,
-        actions: <Widget>[IconButton(icon: Icon(Icons.search), onPressed: goSearch)],
+/*        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios),
+          onPressed: null,
+        ),*/
+        title: new Text("我的私人书库"),
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(icon: Icon(Icons.search), onPressed: goSearch)
+        ],
       ),
-      body: (_books.length == 0)?Center(child:Text("没有收藏任何书籍")):_buildBooksListView(context),
+      body: (_books.length == 0)
+          ? Center(child: Text("没有收藏任何书籍"))
+          : _buildBooksListView(context),
     );
   }
 
   Widget _buildBooksListView(BuildContext context) {
     return ListView.separated(
         itemBuilder: (context, index) {
-          return _buildItemView(context, _books[index]);
+          return _buildItemView(context, index);
         },
         separatorBuilder: (context, index) {
           return Divider(
@@ -96,55 +108,133 @@ class BookListState extends State<BookListPage> {
         itemCount: _books.length);
   }
 
-  Widget _buildItemView(BuildContext context, BookDesc book) {
+  Widget _buildItemView(BuildContext context, int index) {
+    BookDesc book = _books[index];
     return GestureDetector(
-      child: Container(
-        margin: EdgeInsets.only(top:10, bottom: 10),
-        child: Row(
-          children: <Widget>[
-            Container(
-              height: 120,
-              width: 80,
-              child: CachedNetworkImage(
-                  placeholder:(context, string) => Image.asset("lib/images/nopage.jpg"),
-                  imageUrl: book.bookCover),
+      child: Column(
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.only(top: 10, bottom: 10),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  height: 120,
+                  width: 80,
+                  child: CachedNetworkImage(
+                      placeholder: (context, string) =>
+                          Image.asset("lib/images/nopage.jpg"),
+                      imageUrl: book.bookCover),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(book.bookName),
+                      Text("作者：${book.author}"),
+                      Text("简介：${book.bookDesc}",
+                          maxLines: 2, overflow: TextOverflow.ellipsis),
+                      Text("最新章节：${book.lastTitle}"),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: FlatButton(
+                        onPressed: () => readBook(book),
+                        child: Text(
+                          "开始阅读",
+                          style: TextStyle(color: Colors.green),
+                        )),
+                  ),
+                )
+              ],
             ),
-            Expanded(
-              flex:3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          Offstage(
+            offstage: (_curIndex == index) ? false : true,
+            child: Container(
+              padding: EdgeInsets.only(left: 80, top: 0, right: 80, bottom: 20),
+              //child: Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text(book.bookName),
-                  Text("作者：${book.author}"),
-                  Text("简介：${book.bookDesc}", maxLines: 2, overflow:TextOverflow.ellipsis),
-                  Text("最新章节：${book.lastTitle}"),
+                  IconButton(
+                    icon: Text(
+                      "查看目录",
+                      style: TextStyle(
+                        color: Colors.blue,
+                      ),
+                    ),
+                    onPressed: () => gotoCatalogue(book),
+                    constraints: BoxConstraints(minWidth: 80),
+                  ),
+                  IconButton(
+                    icon: Text(
+                      "删除书籍",
+                      style: TextStyle(
+                        color: Colors.blue,
+                      ),
+                    ),
+                    onPressed: () => deleteBook(book),
+                    constraints: BoxConstraints(minWidth: 80),
+                  ),
+                  IconButton(
+                    icon: Text(
+                      book.status == 0?"置顶书籍":"取消置顶",
+                      style: TextStyle(
+                        color: Colors.blue,
+                      ),
+                    ),
+                    onPressed: () => topBook(book),
+                    constraints: BoxConstraints(minWidth: 80),
+                  ),
                 ],
               ),
-            ),
-            Expanded(
-              child: Center(
-                child: FlatButton(onPressed: () => deleteBook(book),
-                    child: Icon(Icons.delete_forever, color: Colors.green,)),
-              ),
-            )
-          ],
-        ),
+            ), //),
+          ),
+        ],
       ),
-      onTap: () => gotoCatalogue(book),
+      onTap: () => showOrHideMenu(index),
     );
   }
 
-  deleteBook(BookDesc book) {
+  readBook(BookDesc book) async {
+    int page = await SpUtils.getSavedPage(book.id);
+    if (page == null) {
+      page = 0;
+    }
+    print("page:$page");
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return ContentPage(arguments: {'id': book.id, 'page': page});
+    }));
+  }
 
+  showOrHideMenu(int index) {
+    int newIndex = (_curIndex == index) ? -1 : index;
+    setState(() {
+      _curIndex = newIndex;
+    });
+  }
+
+  deleteBook(BookDesc book) async{
+    await NovelDatabase.getInstance().deleteBook(book.id);
+    loadData();
+  }
+
+  topBook(BookDesc book) async{
+    int status = (book.status + 1)%2;
+    await NovelDatabase.getInstance().updateBookStatus(book.id, status);
+    loadData();
   }
 
   goSearch() {
-    Navigator.of(context).pushNamed(searchRoute).then((value){
+    Navigator.of(context).pushNamed(searchRoute).then((value) {
       print("value:$value");
-      if(value is List) {
+      if (value is List) {
         int refresh = value[0];
         print("refresh:$refresh");
-        if(refresh == 1) {
+        if (refresh == 1) {
           loadData();
         }
       }
@@ -153,8 +243,8 @@ class BookListState extends State<BookListPage> {
 
   gotoCatalogue(BookDesc book) {
     //Navigator.of(context).pushNamed(catalogueRoute, arguments:{"id":book.id, "title":book.bookName});
-    Navigator.push(context, MaterialPageRoute(builder: (context){
-      return new CataloguePage({"id":book.id, "title":book.bookName});
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return new CataloguePage({"id": book.id, "title": book.bookName});
     }));
   }
 }

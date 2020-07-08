@@ -41,9 +41,11 @@ class NovelDatabase {
     final Database db = await database;
     List<Map<String, dynamic>> result;
     if (order == 0) {
-      result = await db.query('novel', where: "id=?", whereArgs: [id], orderBy: "page asc");
+      result = await db.query('novel',
+          where: "id=?", whereArgs: [id], orderBy: "page asc");
     } else {
-      result = await db.query('novel', where: "id=?", whereArgs: [id], orderBy: "page desc");
+      result = await db.query('novel',
+          where: "id=?", whereArgs: [id], orderBy: "page desc");
     }
     List<Novel> novels = [];
     if (result != null) {
@@ -56,8 +58,8 @@ class NovelDatabase {
 
   Future<dynamic> getNovelContent(int id, int page) async {
     final Database db = await database;
-    List<Map<String, dynamic>> result = await db.rawQuery(
-        "select * from novel where id=? and page=?", [id, page]);
+    List<Map<String, dynamic>> result = await db
+        .rawQuery("select * from novel where id=? and page=?", [id, page]);
     if (result != null && result.length > 0) {
       return Novel.fromJson(result[0]);
     }
@@ -85,9 +87,15 @@ class NovelDatabase {
     );
   }
 
+  Future<dynamic> deleteBook(int id) async {
+    final Database db = await database;
+    return db.delete('books', where: "id=?", whereArgs: [id]);
+  }
+
   Future<List<BookDesc>> findAllBooks() async {
     final Database db = await database;
-    List<Map<String, dynamic>> result = await db.query("books");
+    List<Map<String, dynamic>> result =
+        await db.query("books", orderBy: "status desc");
     List<BookDesc> books = [];
     if (result != null) {
       books = List.generate(result.length, (index) {
@@ -105,5 +113,16 @@ class NovelDatabase {
       return BookDesc.fromJson(result[0]);
     }
     return null;
+  }
+
+  Future<dynamic> updateBookStatus(int id, int status) async {
+    final Database db = await database;
+    return db.update(
+      'books',
+      {'status': status},
+      where: 'id=?',
+      whereArgs: [id],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }

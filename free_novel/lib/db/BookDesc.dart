@@ -1,5 +1,3 @@
-enum Status { Searched, Downloading, Saved }
-
 class BookDesc {
   //书名
   final String bookName;
@@ -24,8 +22,7 @@ class BookDesc {
   //图书封面
   final String bookDesc;
 
-  var status = Status.Searched;
-
+  int status = 0;
   int id = 0;
 
   BookDesc(this.bookName, this.bookUrl, this.author, this.lastUrl,
@@ -46,14 +43,13 @@ class BookDesc {
         parsedJson['type'],
         parsedJson['bookCover'],
         parsedJson['bookDesc']);
-    final index = parsedJson['status'];
-    book.status = Status.values[index];
+    book.status = parsedJson['status'];
     book.id = parsedJson['id'];
     return book;
   }
 
   Map<String, dynamic> toJson() {
     return {'bookName': bookName, 'bookUrl': bookUrl, 'author': author, 'lastUrl': lastUrl,
-      'lastTitle': lastTitle,'type': type, 'bookCover': bookCover, 'bookDesc': bookDesc, 'status': status.index};
+      'lastTitle': lastTitle,'type': type, 'bookCover': bookCover, 'bookDesc': bookDesc, 'status': status};
   }
 }
