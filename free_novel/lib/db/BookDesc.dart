@@ -24,6 +24,7 @@ class BookDesc {
 
   int status = 0;
   int id = 0;
+  int search = 0;
 
   BookDesc(this.bookName, this.bookUrl, this.author, this.lastUrl,
       this.lastTitle, this.type, this.bookCover, this.bookDesc);
@@ -45,11 +46,12 @@ class BookDesc {
         parsedJson['bookDesc']);
     book.status = parsedJson['status'];
     book.id = parsedJson['id'];
+    book.search = parsedJson['search'];
     return book;
   }
 
   Map<String, dynamic> toJson() {
     return {'bookName': bookName, 'bookUrl': bookUrl, 'author': author, 'lastUrl': lastUrl,
-      'lastTitle': lastTitle,'type': type, 'bookCover': bookCover, 'bookDesc': bookDesc, 'status': status};
+      'lastTitle': lastTitle,'type': type, 'bookCover': bookCover, 'bookDesc': bookDesc, 'status': status, 'search':search};
   }
 }

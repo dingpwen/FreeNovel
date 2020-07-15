@@ -3,7 +3,7 @@ class Novel{
   final int id;
   final int page;
   final String title;
-  final String content;
+  String content;
   int status = 0;
   String url = "";
 
@@ -23,6 +23,6 @@ class Novel{
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'page': page, 'title': title, 'content': content};
+    return {'id': id, 'page': page, 'title': title, 'content': content, "url":url};
   }
 }

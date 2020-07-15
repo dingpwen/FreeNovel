@@ -23,6 +23,9 @@ abstract class BaseSearch {
   }
 
   Future<dynamic> parseResult(String response);
+  int getSearchType() {
+    return 0;
+  }
 
   downloadItem(String url, final int novelId) async {
     if (url.isEmpty || _downloadUrls.contains(url)) {
@@ -31,7 +34,7 @@ abstract class BaseSearch {
     _downloadUrls.add(url);
     print("downloadItem:$url");
     DioHelper.doGet(url, params: null, success: (response){
-      print("response:$response");
+      //print("response:$response");
       parseItem(response, novelId);
       _downloadUrls.remove(url);
     }, error: (errorType) {
@@ -72,16 +75,46 @@ abstract class BaseSearch {
     items = List.generate(lists.length, (i){
       return parseItemContent(lists[i]);
     });
+    if(items.length == 0) {
+      return items;
+    }
     print("Items:$items");
     int page = 0;
-    items.forEach((element) {
+    final Novel novel = await NovelDatabase.getInstance().getNovelMaxPage(novelId);
+    int i = 0;
+    int pos = -1;
+    if(novel != null && (novel.url != null)) {
+      i = items.length -1;
+      for(; i>=0; --i) {
+        String url = getBaseUrl() + items[i][ITEM_URL];
+        if(novel.url == url) {
+          pos = i + 1;
+          page = novel.page + 1;
+        }
+      }
+    }
+    if(pos < 0) {
+      pos = 0;
+    } else if(pos == items.length) {
+      print("Novel $novelId No need update.");
+      return items;
+    }
+    for(; pos < items.length; ++pos) {
+      final element = items[pos];
       String url = getBaseUrl() + element[ITEM_URL];
       downloadContent(url, novelId, page++, element[ITEM_TITLE]);
-    });
+    }
+    /*items.forEach((element) {
+      String url = getBaseUrl() + element[ITEM_URL];
+      downloadContent(url, novelId, page++, element[ITEM_TITLE]);
+    });*/
+    final element = items[pos - 1];
+    await NovelDatabase.getInstance().updateBookLast(novelId, element[ITEM_URL], element[ITEM_TITLE]);
     return items;
   }
 
-  downloadContent(String url, final int novelId, final int page, final String title) async {
+  downloadContent(String url, final int novelId, final int page, final String title,
+      {Function(String content) complete, Function(int errorType) fail}) async {
     if (url.isEmpty || _downloadUrls.contains(url)) {
       return;
     }
@@ -89,10 +122,14 @@ abstract class BaseSearch {
     await NovelDatabase.getInstance().insertNovel(novel);
     _downloadUrls.add(url);
     print("downloadContent:$url");
-    DioHelper.doGet(url, params: null, success: (response){
-      parseContentResponse(response, novelId, page);
+    DioHelper.doGet(url, params: null, success: (response) async{
+      String content = await parseContentResponse(response, novelId, page);
+      if(complete != null) {
+        complete(content);
+      }
       _downloadUrls.remove(url);
     }, error: (errorType) {
+      fail(errorType);
       _downloadUrls.remove(url);
     });
   }

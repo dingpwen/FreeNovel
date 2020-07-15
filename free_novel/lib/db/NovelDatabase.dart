@@ -19,7 +19,7 @@ class NovelDatabase {
       join(await getDatabasesPath(), 'novel_database.db'),
       onCreate: (db, version) {
         db.execute(
-            "CREATE TABLE books(id INTEGER PRIMARY KEY AUTOINCREMENT, bookName TEXT, bookUrl TEXT, author TEXT, lastUrl  TEXT, lastTitle TEXT, type TEXT, bookCover TEXT, bookDesc TEXT, status INTEGER DEFAULT(0))");
+            "CREATE TABLE books(id INTEGER PRIMARY KEY AUTOINCREMENT, bookName TEXT, bookUrl TEXT, author TEXT, lastUrl  TEXT, lastTitle TEXT, type TEXT, bookCover TEXT, bookDesc TEXT, status INTEGER DEFAULT(0), search status INTEGER DEFAULT(0))");
         db.execute(
             "CREATE TABLE novel(id INTEGER, page INTEGER, title TEXT, content TEXT, url TEXT, status INTEGER DEFAULT(0), PRIMARY KEY(id,page))");
       },
@@ -60,6 +60,16 @@ class NovelDatabase {
     final Database db = await database;
     List<Map<String, dynamic>> result = await db
         .rawQuery("select * from novel where id=? and page=?", [id, page]);
+    if (result != null && result.length > 0) {
+      return Novel.fromJson(result[0]);
+    }
+    return null;
+  }
+
+  Future<dynamic> getNovelMaxPage(int id) async {
+    final Database db = await database;
+    List<Map<String, dynamic>> result = await db.query('novel',
+        where: "id=?", whereArgs: [id], orderBy: "page desc", limit: 1);
     if (result != null && result.length > 0) {
       return Novel.fromJson(result[0]);
     }
@@ -120,6 +130,17 @@ class NovelDatabase {
     return db.update(
       'books',
       {'status': status},
+      where: 'id=?',
+      whereArgs: [id],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<dynamic> updateBookLast(int id, String lastTitle, String lastUrl) async {
+    final Database db = await database;
+    return db.update(
+      'books',
+      {'lastTitle': lastTitle, 'lastUrl':lastUrl},
       where: 'id=?',
       whereArgs: [id],
       conflictAlgorithm: ConflictAlgorithm.replace,

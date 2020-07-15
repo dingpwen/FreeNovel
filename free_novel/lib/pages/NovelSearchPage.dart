@@ -192,6 +192,7 @@ class NovelSearchState extends State<NovelSearchPage> {
       //showToast();
       return;
     }
+    book.search = _search.getSearchType();
     int id = await NovelDatabase.getInstance().insertBook(book);
     refresh = 1;
     _search.downloadItem(book.bookUrl, id);

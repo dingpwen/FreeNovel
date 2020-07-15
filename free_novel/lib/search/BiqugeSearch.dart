@@ -2,6 +2,7 @@ import 'package:novel/search/BaseSearch.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'package:novel/db/BookDesc.dart';
+import 'package:novel/search/SearchFactory.dart';
 
 class BiqugeSearch extends BaseSearch{
   static const _BASE_URL = "https://www.xsbiquge.com/search.php";
@@ -15,6 +16,12 @@ class BiqugeSearch extends BaseSearch{
   @override
   String getSearchUrl() {
     return _BASE_URL;
+  }
+
+  @override
+  int getSearchType() {
+    // TODO: implement getSearchType
+    return SearchFactory.TYPE_BIQUGE;
   }
 
   @override

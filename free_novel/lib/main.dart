@@ -5,10 +5,26 @@ import 'package:novel/db/NovelDatabase.dart';
 import 'package:novel/pages/ContentPage.dart';
 import 'package:novel/pages/NovelSearchPage.dart';
 import 'package:novel/pages/CataloguePage.dart';
+import 'package:novel/task/AutoRefresh.dart';
 import 'package:novel/utils/SpUtils.dart';
+import 'package:background_fetch/background_fetch.dart';
+
+/// This "Headless Task" is run when app is terminated.
+void backgroundFetchHeadlessTask(String taskId) async {
+  DateTime timestamp = DateTime.now();
+  print("[BackgroundFetch] Headless event received: $taskId@$timestamp");
+  BackgroundFetch.finish(taskId);
+
+  if (taskId == 'flutter_background_fetch') {
+    await AutoRefresh.fetchAndUpdateAllBooks();
+  }
+}
 
 void main() {
   runApp(MyApp());
+  // Register to receive BackgroundFetch events after app is terminated.
+  // Requires {stopOnTerminate: false, enableHeadless: true}
+  BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 }
 
 const String searchRoute = 'NovelSearch';
@@ -60,6 +76,56 @@ class BookListState extends State<BookListPage> {
   void initState() {
     super.initState();
     loadData();
+    initPlatformState();
+  }
+
+  Future<void> initPlatformState() async {
+    BackgroundFetch.configure(BackgroundFetchConfig(
+      minimumFetchInterval: 60,
+      forceAlarmManager: true,
+      stopOnTerminate: false,
+      startOnBoot: true,
+      enableHeadless: true,
+      requiresBatteryNotLow: true,
+      requiresCharging: false,
+      requiresStorageNotLow: true,
+      requiresDeviceIdle: false,
+      requiredNetworkType: NetworkType.UNMETERED,
+    ), _onBackgroundFetch).then((int status){
+      print('[BackgroundFetch] configure success: $status');
+    }).catchError((e) {
+      print('[BackgroundFetch] configure ERROR: $e');
+    });
+
+    /*BackgroundFetch.scheduleTask(TaskConfig(
+        taskId: "com.transistorsoft.customtask",
+        delay: 10000,
+        periodic: false,
+        forceAlarmManager: true,
+        stopOnTerminate: false,
+        enableHeadless: true
+    ));*/
+  }
+
+  void _onBackgroundFetch(String taskId) async {
+    DateTime timestamp = DateTime.now();
+    print("[BackgroundFetch] Event received: $taskId@$timestamp");
+
+    if (taskId == "flutter_background_fetch") {
+      // Schedule a one-shot task when fetch event received (for testing).
+      BackgroundFetch.scheduleTask(TaskConfig(
+          taskId: "com.transistorsoft.customtask",
+          delay: 5000,
+          periodic: false,
+          forceAlarmManager: true,
+          stopOnTerminate: false,
+          enableHeadless: true
+      ));
+    }
+
+    // IMPORTANT:  You must signal completion of your fetch task or the OS can punish your app
+    // for taking too long in the background.
+    BackgroundFetch.finish(taskId);
   }
 
   loadData() async {
