@@ -1,21 +1,21 @@
-import 'package:novel/search/BaseSearch.dart';
+import 'BaseSearch.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'package:novel/db/BookDesc.dart';
-import 'package:novel/search/SearchFactory.dart';
+import 'SearchFactory.dart';
 
 class BiqugeSearch extends BaseSearch{
-  static const _BASE_URL = "https://www.xsbiquge.com/search.php";
+  static const _SEARCH_URL = "https://www.xsbiquge.com/search.php";
   static const _searchKey = "keyword";
 
   @override
-  Map<String, String> getParams(String query) {
+  Map<String, String> getParams(dynamic query) {
     return {_searchKey: query};
   }
 
   @override
   String getSearchUrl() {
-    return _BASE_URL;
+    return _SEARCH_URL;
   }
 
   @override
@@ -33,7 +33,7 @@ class BiqugeSearch extends BaseSearch{
     var document = parse(response);
     List<Element> books = document.querySelectorAll(".result-item");
     List<BookDesc> data = [];
-    if(books.isNotEmpty){
+    if(books != null && books.isNotEmpty){
       data = List.generate(books.length, (i){
         var detail = books[i].querySelector('.result-game-item-detail');
         var itemInfo = detail.querySelector(".result-game-item-info");
@@ -72,9 +72,12 @@ class BiqugeSearch extends BaseSearch{
 
   @override
   dynamic parseContent(Element element){
-    String content = element.text.trim().replaceAll("&nbsp;", "");
+    //String content = element.text.trim().replaceAll("&nbsp;", "");
     //content = content.replaceAll("&nbsp;", "");
     //content = content.replaceAll("<br><br>", "\\n");
+    String content = element.outerHtml;
+
+    //print("content:$content");
     return content;
   }
 }

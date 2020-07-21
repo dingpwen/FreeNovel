@@ -1,7 +1,7 @@
 
 import 'package:html/dom.dart';
-import 'package:novel/search/BaseSearch.dart';
-import 'package:novel/search/SearchFactory.dart';
+import 'BaseSearch.dart';
+import 'SearchFactory.dart';
 
 class OtherSearch extends BaseSearch{
   int _type =  SearchFactory.TYPE_OTHER;
@@ -35,7 +35,7 @@ class OtherSearch extends BaseSearch{
   }
 
   @override
-  Map<String, String> getParams(String query) {
+  Map<String, String> getParams(dynamic query) {
     // TODO: implement getParams
     throw UnimplementedError();
   }

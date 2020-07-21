@@ -18,9 +18,13 @@ class NovelSearchState extends State<NovelSearchPage> {
   int refresh = 0;
 
   @override
-  void initState() {
-    _search = SearchFactory.getSearch(SearchFactory.BIQUGE);
+  void initState(){
+    initSearch();
     super.initState();
+  }
+
+  void initSearch() async{
+    _search = await SearchFactory.getDefault();
   }
 
   @override
@@ -157,7 +161,7 @@ class NovelSearchState extends State<NovelSearchPage> {
     Navigator.pop(context, [refresh]);
   }
 
-  doSearch() {
+  doSearch() async{
     onSearchResult("");
     print("Search for ${_textController.text}");
     _search.doSearch(_textController.text, success: (data) {
@@ -168,7 +172,7 @@ class NovelSearchState extends State<NovelSearchPage> {
   }
 
   onSearchResult(String result) async {
-    print("result:$result");
+    //print("result:$result");
     if (result.length == 0) {
       //显示 正在搜索...
       setState(() {

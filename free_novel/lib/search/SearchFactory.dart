@@ -1,12 +1,16 @@
-import 'package:novel/search/BaseSearch.dart';
-import 'package:novel/search/BiqugeSearch.dart';
+import 'BaseSearch.dart';
+import 'BiqugeSearch.dart';
+import 'WxcSearch.dart';
 import 'package:novel/utils/SpUtils.dart';
 
 class SearchFactory{
   static const BIQUGE = "biquge";
+  static const  WXC = "23wxc";
   static const OTHER = "other";
   static const TYPE_BIQUGE = 0;
+  static const TYPE_WXC = 1;
   static const TYPE_OTHER = 3;
+  static const TYPE_DEFAULT = 1;
   static Map<String, BaseSearch> _searchMap = {};
 
   static BaseSearch getSearch(String name) {
@@ -19,6 +23,10 @@ class SearchFactory{
         search = BiqugeSearch();
         _searchMap[BIQUGE] = search;
         break;
+      case WXC:
+        search = WxcSearch();
+        _searchMap[WXC] = search;
+        break;
       default:
         break;
     }
@@ -29,6 +37,8 @@ class SearchFactory{
     switch(type) {
       case TYPE_BIQUGE:
         return getSearch(BIQUGE);
+      case TYPE_WXC:
+        return getSearch(WXC);
       default:
         return getSearch(OTHER);
     }
@@ -36,6 +46,10 @@ class SearchFactory{
 
   static Future<BaseSearch> getDefault() async{
     final searchName  = await SpUtils.getSearchName();
-    return getSearch(searchName);
+    if(searchName == null || searchName.isEmpty) {
+      return getSearchByType(TYPE_DEFAULT);
+    } else {
+      return getSearch(searchName);
+    }
   }
 }
