@@ -23,20 +23,20 @@ class DioHelper {
     return _dio;
   }
 
-  static void doGet<T>(String url,
+  static Future<void> doGet<T>(String url,
       {String method,
         bool needGbk,
         params,
         Function(T t) success,
         Function(int errorType) error}) async {
     if(needGbk) {
-      _doGetGbk(url, method:method, params: params, success: success, error: error);
+      return _doGetGbk(url, method:method, params: params, success: success, error: error);
     } else {
-      _doGet(url, method:method, params: params, success: success, error: error);
+      return _doGet(url, method:method, params: params, success: success, error: error);
     }
   }
 
-  static void _doGet<T>(String url,
+  static Future<void> _doGet<T>(String url,
       {String method,
       params,
       Function(T t) success,
@@ -70,7 +70,7 @@ class DioHelper {
     }
   }
 
-  static void _doGetGbk<T>(String url,
+  static Future<void> _doGetGbk<T>(String url,
       {String method,
       params,
       Function(T t) success,

@@ -3,6 +3,8 @@ import 'package:novel/db/NovelDatabase.dart';
 import "package:novel/utils/DioHelper.dart";
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
+import 'package:synchronized/synchronized.dart';
+import 'dart:io';
 
 abstract class BaseSearch {
   static const PARENT_CLASS = "parent";
@@ -11,7 +13,9 @@ abstract class BaseSearch {
   static const ITEM_PATH = "path";
   static const ITEM_URL = "url";
   static const ITEM_TITLE = "title";
-  static const _FIRST_TITLE = 'µÚÒ»ÕÂ';
+  static const _FIRST_TITLE = 'ç¬¬ä¸€ç« ';
+  static const _BATCH_NUM = 100;
+  final _lock = new Lock();
 
   dynamic getParams(String query);
   String getSearchUrl();
@@ -35,6 +39,7 @@ abstract class BaseSearch {
   }
 
   Future<dynamic> parseResult(String response);
+  List<Novel> _novelList = [];
   int getSearchType() {
     return 0;
   }
@@ -44,11 +49,12 @@ abstract class BaseSearch {
       return;
     }
     _downloadUrls.add(url);
+    _novelList.clear();
     print("downloadItem:$url");
     DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) {
+      _downloadUrls.remove(url);
       //print("response:$response");
       parseItem(response, novelId);
-      _downloadUrls.remove(url);
     }, error: (errorType) {
       print("errorType:$errorType");
       _downloadUrls.remove(url);
@@ -94,10 +100,10 @@ abstract class BaseSearch {
     print("Items:$items");
     int page = 0;
     final Novel novel =
-        await NovelDatabase.getInstance().getNovelMaxPage(novelId);
+        await NovelDatabase.getInstance().getNovelMaxPage(novelId, status:1);
     int i = 0;
     int pos = -1;
-    //²éÕÒÒÑ±£´æµÄÕÂ½Ú
+    //æŸ¥æ‰¾å·²ä¿å­˜çš„ç« èŠ‚
     if (novel != null && (novel.url != null)) {
       i = items.length - 1;
       for (; i >= 0; --i) {
@@ -108,7 +114,7 @@ abstract class BaseSearch {
         }
       }
     }
-    //²éÕÒµÚÒ»ÕÂ£¬ÒòÎªÓĞµÄÍøÖ·¿ÉÄÜ»á°Ñ×îĞÂÕÂ½Ú·ÅÔÚÇ°Ãæ
+    //æŸ¥æ‰¾ç¬¬ä¸€ç« ï¼Œå› ä¸ºæœ‰çš„ç½‘å€å¯èƒ½ä¼šæŠŠæœ€æ–°ç« èŠ‚æ”¾åœ¨å‰é¢
     if (pos < 0) {
       i = items.length - 1;
       for (; i < items.length; ++i) {
@@ -129,7 +135,8 @@ abstract class BaseSearch {
     for (; pos < items.length; ++pos) {
       final element = items[pos];
       String url = getBaseUrl() + element[ITEM_URL];
-      downloadContent(url, novelId, page++, element[ITEM_TITLE]);
+      await downloadContent(url, novelId, page++, element[ITEM_TITLE]);
+      sleep(const Duration(milliseconds: 10));
     }
     /*items.forEach((element) {
       String url = getBaseUrl() + element[ITEM_URL];
@@ -147,35 +154,51 @@ abstract class BaseSearch {
     if (url.isEmpty || _downloadUrls.contains(url)) {
       return;
     }
-    final novel =
+    var novel =
         Novel(id: novelId, page: page, title: title, content: "", url: url);
-    await NovelDatabase.getInstance().insertNovel(novel);
     _downloadUrls.add(url);
     print("downloadContent:$url");
-    DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) async {
-      String content = await parseContentResponse(response, novelId, page);
+    await DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) async {
+      _downloadUrls.remove(url);
+      String content = parseContentResponse(response, novelId, page);
+      novel.content = content;
+      novel.status = 1;
+      saveNovel(novel);
       if (complete != null) {
         complete(content);
       }
-      _downloadUrls.remove(url);
+
     }, error: (errorType) {
+      _downloadUrls.remove(url);
       if (fail != null) {
         fail(errorType);
       }
-      _downloadUrls.remove(url);
+      saveNovel(novel);
+    });
+  }
+
+  void saveNovel(Novel novel) async{
+    await _lock.synchronized(() async {
+      _novelList.add(novel);
+      if(_novelList.length >= _BATCH_NUM || _downloadUrls.isEmpty){
+        await NovelDatabase.getInstance().insertNovels(_novelList);
+        _novelList.clear();
+      }
     });
   }
 
   Map<String, dynamic> getContentParams();
-  dynamic parseContent(Element element);
 
-  Future<dynamic> parseContentResponse(
-      String response, final int novelId, final int page) async {
+  dynamic parseContent(Element element) {
+    String content = element.outerHtml;
+    return content;
+  }
+
+  dynamic parseContentResponse(
+      String response, final int novelId, final int page) {
     final params = getContentParams();
     Element element = _getTargetElement(response, params)[0];
     dynamic content = parseContent(element);
-    //print("content:$content");
-    NovelDatabase.getInstance().updateNovelContent(novelId, page, content);
     return content;
   }
 }

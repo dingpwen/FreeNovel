@@ -37,6 +37,7 @@ dependencies:
   flutter_html: ^1.0.0-pre.1
   url_launcher: ^5.5.0
   fast_gbk: 0.1.2
+  synchronized: ^2.2.0+2
 
 dev_dependencies:
   flutter_test:

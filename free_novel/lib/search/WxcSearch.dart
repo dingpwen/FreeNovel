@@ -116,10 +116,4 @@ class WxcSearch extends BaseSearch {
   Map<String, String> getContentParams() {
     return {BaseSearch.ITEM_ID: "contents"};
   }
-
-  @override
-  dynamic parseContent(Element element) {
-    String content = element.outerHtml;
-    return content;
-  }
 }

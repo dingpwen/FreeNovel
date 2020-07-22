@@ -69,15 +69,4 @@ class BiqugeSearch extends BaseSearch{
   Map<String, dynamic> getContentParams(){
     return {BaseSearch.ITEM_ID: "content"};
   }
-
-  @override
-  dynamic parseContent(Element element){
-    //String content = element.text.trim().replaceAll("&nbsp;", "");
-    //content = content.replaceAll("&nbsp;", "");
-    //content = content.replaceAll("<br><br>", "\\n");
-    String content = element.outerHtml;
-
-    //print("content:$content");
-    return content;
-  }
 }

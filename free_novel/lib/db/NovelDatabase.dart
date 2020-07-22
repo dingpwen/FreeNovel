@@ -37,20 +37,40 @@ class NovelDatabase {
     );
   }
 
+  Future<void> insertNovels(List<Novel> novelList) async {
+    final Database db = await database;
+    var batch = db.batch();
+    novelList.forEach((novel) {
+      batch.insert(
+        'novel',
+        novel.toJson(),
+        // 插入冲突策略，新的替换旧的
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+    await batch.commit();
+  }
+
   Future<List<Novel>> findNovelById(int id, {int order = 0}) async {
     final Database db = await database;
     List<Map<String, dynamic>> result;
     if (order == 0) {
       result = await db.query('novel',
-          where: "id=?", whereArgs: [id], orderBy: "page asc");
+          columns: ['id', 'page', 'title', 'status'],
+          where: "id=?",
+          whereArgs: [id],
+          orderBy: "page asc");
     } else {
       result = await db.query('novel',
-          where: "id=?", whereArgs: [id], orderBy: "page desc");
+          columns: ['id', 'page', 'title', 'status'],
+          where: "id=?",
+          whereArgs: [id],
+          orderBy: "page desc");
     }
     List<Novel> novels = [];
     if (result != null) {
       novels = List.generate(result.length, (index) {
-        return Novel.fromJson(result[index]);
+        return Novel.fromJsonNoContent(result[index]);
       });
     }
     return novels;
@@ -66,10 +86,19 @@ class NovelDatabase {
     return null;
   }
 
-  Future<dynamic> getNovelMaxPage(int id) async {
+  Future<dynamic> getNovelMaxPage(int id, {int status = -1}) async {
     final Database db = await database;
-    List<Map<String, dynamic>> result = await db.query('novel',
-        where: "id=?", whereArgs: [id], orderBy: "page desc", limit: 1);
+    List<Map<String, dynamic>> result = [];
+    if (status == -1) {
+      result = await db.query('novel',
+          where: "id=?", whereArgs: [id], orderBy: "page desc", limit: 1);
+    } else {
+      result = await db.query('novel',
+          where: "id=? and status=?",
+          whereArgs: [id, status],
+          orderBy: "page desc",
+          limit: 1);
+    }
     if (result != null && result.length > 0) {
       return Novel.fromJson(result[0]);
     }
@@ -136,11 +165,12 @@ class NovelDatabase {
     );
   }
 
-  Future<dynamic> updateBookLast(int id, String lastTitle, String lastUrl) async {
+  Future<dynamic> updateBookLast(
+      int id, String lastTitle, String lastUrl) async {
     final Database db = await database;
     return db.update(
       'books',
-      {'lastTitle': lastTitle, 'lastUrl':lastUrl},
+      {'lastTitle': lastTitle, 'lastUrl': lastUrl},
       where: 'id=?',
       whereArgs: [id],
       conflictAlgorithm: ConflictAlgorithm.replace,

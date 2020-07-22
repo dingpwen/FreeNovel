@@ -22,7 +22,18 @@ class Novel{
     return novel;
   }
 
+  factory Novel.fromJsonNoContent(Map<String, dynamic> parsedJson){
+    var novel =  Novel(
+        id:parsedJson['id'],
+        page:parsedJson['page'],
+        title:parsedJson["title"],
+        content:""
+    );
+    novel.status = parsedJson['status'];
+    return novel;
+  }
+
   Map<String, dynamic> toJson() {
-    return {'id': id, 'page': page, 'title': title, 'content': content, "url":url};
+    return {'id': id, 'page': page, 'title': title, 'content': content, 'url':url, 'status':status};
   }
 }

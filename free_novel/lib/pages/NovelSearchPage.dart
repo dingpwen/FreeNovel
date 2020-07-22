@@ -192,12 +192,14 @@ class NovelSearchState extends State<NovelSearchPage> {
     //compute(download, [_search, item.bookUrl]);
     final exist =
         await NovelDatabase.getInstance().findBookFromUrl(book.bookUrl);
+    int id = -1;
     if (exist != null) {
       //showToast();
-      return;
+      id = exist.id;
+    } else {
+      id = await NovelDatabase.getInstance().insertBook(book);
     }
     book.search = _search.getSearchType();
-    int id = await NovelDatabase.getInstance().insertBook(book);
     refresh = 1;
     _search.downloadItem(book.bookUrl, id);
   }
