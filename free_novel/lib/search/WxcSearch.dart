@@ -1,11 +1,9 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'package:novel/db/BookDesc.dart';
 import 'BaseSearch.dart';
 import 'SearchFactory.dart';
-import 'package:fast_gbk/fast_gbk.dart';
 
 class WxcSearch extends BaseSearch {
   static const _SEARCH_URL = "https://www.23wxc.com/modules/article/search.php";
@@ -50,7 +48,6 @@ class WxcSearch extends BaseSearch {
   @override
   Future parseResult(String response) async {
     //print("response:$response");
-    _baseUrl = null;
     var document = parse(response);
     var list = document.getElementById('content');
     List<Element> books = list.querySelectorAll("table>tbody>tr");
@@ -64,15 +61,11 @@ class WxcSearch extends BaseSearch {
         //this.bookName, this.bookUrl, this.author, this.lastUrl,
         //this.lastTitle, this.type, this.bookCover, this.bookDesc
         final url = infos[1].querySelector('a').attributes['href'].trim();
-        int last = url.lastIndexOf('/');
-        if(_baseUrl == null){
-          _baseUrl = url.substring(0, last + 1);
-        }
         var imageUrl = url
             .replaceAll('https://www.23wxc.com/',
                 'https://www.23wxc.com/files/article/image/')
             .replaceAll("/index.html", '');
-        last = imageUrl.lastIndexOf('/');
+        int last = imageUrl.lastIndexOf('/');
         imageUrl = imageUrl + imageUrl.substring(last) + 's.jpg';
         BookDesc book = BookDesc(
             infos[0].querySelector('a').text.trim(),//bookName
@@ -98,6 +91,13 @@ class WxcSearch extends BaseSearch {
   @override
   String getBaseUrl() {
     return _baseUrl;
+  }
+
+  @override
+  downloadItem(String url, final int novelId) async {
+    int last = url.lastIndexOf('/');
+    _baseUrl = url.substring(0, last + 1);
+    super.downloadItem(url, novelId);
   }
 
   @override

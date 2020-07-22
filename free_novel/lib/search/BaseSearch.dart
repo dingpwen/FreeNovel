@@ -14,7 +14,7 @@ abstract class BaseSearch {
   static const ITEM_URL = "url";
   static const ITEM_TITLE = "title";
   static const _FIRST_TITLE = '第一章';
-  static const _BATCH_NUM = 100;
+  static const _BATCH_NUM = 60;
   final _lock = new Lock();
 
   dynamic getParams(String query);
@@ -39,9 +39,25 @@ abstract class BaseSearch {
   }
 
   Future<dynamic> parseResult(String response);
+  int _downloadState = 0;//0:下载中 1：下载完成 2：取消下载
   List<Novel> _novelList = [];
   int getSearchType() {
     return 0;
+  }
+
+  cancel(){
+    _setDownloadState(2);
+  }
+
+  _setDownloadState(int state) {
+    var lock = Lock();
+    lock.synchronized(() {
+      print("setState:$state");
+      _downloadState = state;
+    });
+  }
+  int getDownloadState() {
+    return _downloadState;
   }
 
   downloadItem(String url, final int novelId) async {
@@ -50,6 +66,7 @@ abstract class BaseSearch {
     }
     _downloadUrls.add(url);
     _novelList.clear();
+    _setDownloadState(0);
     print("downloadItem:$url");
     DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) {
       _downloadUrls.remove(url);
@@ -97,7 +114,7 @@ abstract class BaseSearch {
     if (items.length == 0) {
       return items;
     }
-    print("Items:$items");
+    //print("Items:$items");
     int page = 0;
     final Novel novel =
         await NovelDatabase.getInstance().getNovelMaxPage(novelId, status:1);
@@ -130,9 +147,10 @@ abstract class BaseSearch {
       pos = 0;
     } else if (pos == items.length) {
       print("Novel $novelId No need update.");
+      _setDownloadState(1);
       return items;
     }
-    for (; pos < items.length; ++pos) {
+    for (; pos < items.length && (_downloadState != 2); ++pos) {
       final element = items[pos];
       String url = getBaseUrl() + element[ITEM_URL];
       await downloadContent(url, novelId, page++, element[ITEM_TITLE]);
@@ -145,6 +163,9 @@ abstract class BaseSearch {
     final element = items[pos - 1];
     await NovelDatabase.getInstance()
         .updateBookLast(novelId, element[ITEM_URL], element[ITEM_TITLE]);
+    if(_downloadState != 2) {
+      _setDownloadState(1);
+    }
     return items;
   }
 
@@ -198,6 +219,9 @@ abstract class BaseSearch {
       String response, final int novelId, final int page) {
     final params = getContentParams();
     Element element = _getTargetElement(response, params)[0];
+    if(element == null) {
+      return "";
+    }
     dynamic content = parseContent(element);
     return content;
   }

@@ -35,7 +35,9 @@ class AboutPage extends StatelessWidget {
 
   Widget _buildBody(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 60, bottom: 40),
+      margin: EdgeInsets.only(
+          top: MediaQuery.of(context).size.height * 0.1,
+          bottom: 40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[

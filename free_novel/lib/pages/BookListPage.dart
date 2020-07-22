@@ -92,6 +92,7 @@ class BookListState extends State<BookListPage> with AutomaticKeepAliveClientMix
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     print("booklist");
     // TODO: implement build
     return Scaffold(

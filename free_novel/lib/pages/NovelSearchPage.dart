@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:novel/db/NovelDatabase.dart';
 import 'package:novel/search/BaseSearch.dart';
 import 'package:novel/search/SearchFactory.dart';
 import 'package:novel/db/BookDesc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:novel/utils/Toast.dart';
 
 class NovelSearchPage extends StatefulWidget {
   @override
@@ -11,19 +14,31 @@ class NovelSearchPage extends StatefulWidget {
 }
 
 class NovelSearchState extends State<NovelSearchPage> {
+  int refresh = 0;
   final _textController = TextEditingController();
-  String _result = "";
+  String _result;
+  Map<String, int> _downloadItems = {};
+  String _curUrl;
   List<BookDesc> _resultList = [];
   BaseSearch _search;
-  int refresh = 0;
+  Timer _timer;
 
   @override
-  void initState(){
+  void initState() {
     initSearch();
     super.initState();
   }
 
-  void initSearch() async{
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    if (_timer != null) {
+      _timer.cancel();
+    }
+  }
+
+  void initSearch() async {
     _search = await SearchFactory.getDefault();
   }
 
@@ -65,15 +80,24 @@ class NovelSearchState extends State<NovelSearchPage> {
               IconButton(icon: Icon(Icons.search), onPressed: doSearch)
             ],
           ),
-          body: (_result == "")
-              ? Center(
-                  child: Text("Searching..."),
-                )
-              : _buildSearchResultView()),
-      onWillPop: (){
-        goBack();
+          body: _buildBody(context)),
+      onWillPop: () {
+        return goBack();
       },
     );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_result == null) {
+      return Center(
+        child: Text("开始搜书吧..."),
+      );
+    }
+    return (_result == "")
+        ? Center(
+            child: Text("正在搜索..."),
+          )
+        : _buildSearchResultView();
   }
 
   _buildSearchResultView() {
@@ -131,6 +155,8 @@ class NovelSearchState extends State<NovelSearchPage> {
             child: CachedNetworkImage(
                 placeholder: (context, string) =>
                     Image.asset("lib/images/nopage.jpg"),
+                errorWidget: (context, url, error) =>
+                    Image.asset("lib/images/nopage.jpg"),
                 imageUrl: item.bookCover),
           ),
           Expanded(
@@ -148,8 +174,7 @@ class NovelSearchState extends State<NovelSearchPage> {
           ),
           Expanded(
             child: Center(
-              child: FlatButton(
-                  onPressed: () => downloadItem(item), child: Text("下载收藏")),
+              child: _buildTrail(context, item),
             ),
           )
         ],
@@ -157,14 +182,59 @@ class NovelSearchState extends State<NovelSearchPage> {
     );
   }
 
-  goBack() {
-    Navigator.pop(context, [refresh]);
+  Widget _buildTrail(BuildContext context, BookDesc item) {
+    if (_downloadItems.containsKey(item.bookUrl)) {
+      if (_downloadItems[item.bookUrl] == 1) {
+        //0:下载中 1：下载完成 2：下载取消或中断
+        return FlatButton(
+          onPressed: null,
+          child: Text("下载完成"),
+        );
+      } else if (_curUrl == item.bookUrl) {
+        return FlatButton(
+            onPressed: () => cancelDownload(context, item),
+            child: CircularProgressIndicator(
+              strokeWidth: 4,
+              backgroundColor: Colors.blue,
+              valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
+            ));
+        /*return CircularProgressIndicator(
+          strokeWidth: 4,
+          backgroundColor: Colors.blue,
+          valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
+        );*/
+      } else {
+        return FlatButton(
+          onPressed: () => downloadItem(item),
+          child: Text("重新下载"),
+        );
+      }
+    } else {
+      return FlatButton(
+        onPressed: () => downloadItem(item),
+        child: Text("下载收藏"),
+      );
+    }
   }
 
-  doSearch() async{
+  goBack() {
+    if (_curUrl != null) {
+      showConfirmDialog(context, '退出确认', '你有书籍正在下载，退出将取消下载，确认要退出吗？',
+          callback: () {
+        _search.cancel();
+        Navigator.pop(context, [refresh]);
+      });
+    } else {
+      Navigator.pop(context, [refresh]);
+    }
+  }
+
+  doSearch() async {
     onSearchResult("");
+    _downloadItems.clear();
     print("Search for ${_textController.text}");
     _search.doSearch(_textController.text, success: (data) {
+      _textController.clear();
       onSearchResult(data.toString());
     }, error: (type) {
       print("error type:$type");
@@ -190,6 +260,10 @@ class NovelSearchState extends State<NovelSearchPage> {
 
   downloadItem(BookDesc book) async {
     //compute(download, [_search, item.bookUrl]);
+    if (_curUrl != null && _downloadItems[_curUrl] == 0) {
+      Toast.show(context, "您有其它任务在下载中！", duration: 2);
+      return;
+    }
     final exist =
         await NovelDatabase.getInstance().findBookFromUrl(book.bookUrl);
     int id = -1;
@@ -201,12 +275,72 @@ class NovelSearchState extends State<NovelSearchPage> {
     }
     book.search = _search.getSearchType();
     refresh = 1;
+    _downloadItems[book.bookUrl] = 0;
+    setState(() {
+      _curUrl = book.bookUrl;
+    });
     _search.downloadItem(book.bookUrl, id);
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_search.getDownloadState() == 1) {
+        onComplete();
+      }
+    });
   }
 
-  /*static void download(List<dynamic> params) async{
-    BaseSearch search = params[0];
-    String url = params[1];
-    await search.downloadItem(url);
-  }*/
+  onComplete() {
+    _downloadItems[_curUrl] = 1;
+    _timer.cancel();
+    _timer = null;
+    setState(() {
+      _curUrl = null;
+    });
+  }
+
+  cancelDownload(BuildContext context, BookDesc book) async {
+    showConfirmDialog(context, '取消任务', '确定要取消下载 ${book.bookName} 吗？',
+        callback: () {
+      _search.cancel();
+      _downloadItems[book.bookUrl] = 2;
+      setState(() {
+        _curUrl = null;
+      });
+    });
+  }
+
+  showConfirmDialog(BuildContext context, String title, String message,
+      {Function() callback}) {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            content: new SingleChildScrollView(
+              child: new ListBody(
+                children: <Widget>[
+                  new Text(message),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text('取消'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              new FlatButton(
+                child: new Text('确定'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (callback != null) {
+                    callback();
+                  }
+                },
+              ),
+            ],
+          );
+        });
+  }
 }
