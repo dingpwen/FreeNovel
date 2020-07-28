@@ -161,16 +161,19 @@ class NovelSearchState extends State<NovelSearchPage> {
           ),
           Expanded(
             flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(item.bookName),
-                Text("作者：${item.author}"),
-                Text("简介：${item.bookDesc}",
-                    maxLines: 2, overflow: TextOverflow.ellipsis),
-                Text("最新章节：${item.lastTitle}"),
-              ],
-            ),
+            child: Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(item.bookName),
+                  Text("作者：${item.author}"),
+                  Text("简介：${item.bookDesc}",
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text("最新章节：${item.lastTitle}"),
+                ],
+              ),
+            )
           ),
           Expanded(
             child: Center(
@@ -251,7 +254,7 @@ class NovelSearchState extends State<NovelSearchPage> {
       return;
     }
     var resultList = await _search.parseResult(result);
-    print("resultList:$resultList");
+    //print("resultList:$resultList");
     setState(() {
       _result = result;
       _resultList = resultList;

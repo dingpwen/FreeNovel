@@ -4,11 +4,12 @@ import 'package:html/dom.dart';
 import 'package:novel/db/BookDesc.dart';
 import 'BaseSearch.dart';
 import 'SearchFactory.dart';
+import 'package:fast_gbk/fast_gbk.dart';
 
 class WxcSearch extends BaseSearch {
   static const _SEARCH_URL = "https://www.23wxc.com/modules/article/search.php";
   static const _searchKey = "searchkey";
-  final platform = const MethodChannel("org.wen.icude/my");
+  //final platform = const MethodChannel("org.wen.icude/my");
   String _url;
   String _baseUrl;
 
@@ -33,11 +34,24 @@ class WxcSearch extends BaseSearch {
     return null;
   }
 
+ String _getGbkString(String query){
+    if(query == null || query.length == 0) {
+      return null;
+    }
+   final lint = gbk.encode(query);
+    String result = '';
+    lint.forEach((value) {
+      result += '%${(value & 0xFF).toRadixString(16)}';
+    });
+    return result.toUpperCase();
+  }
+
   doSearch<T>(String query,
       {Function(T t) success, Function(int errorType) error}) async {
     try {
-      var response = await platform.invokeMethod("gbk", {"content":query});
-      _url = _SEARCH_URL + "?" + _searchKey + "=" + response;
+      final gbkQuery = _getGbkString(query);
+      //var response = await platform.invokeMethod("gbk", {"content":query});
+      _url = '$_SEARCH_URL?$_searchKey=$gbkQuery';
       print("url:$_url");
     } on PlatformException catch(e) {
       print(e.toString());
@@ -103,13 +117,6 @@ class WxcSearch extends BaseSearch {
   @override
   Map<String, String> getItemParams() {
     return {BaseSearch.ITEM_ID: "at", BaseSearch.ITEM_PATH:"tbody>tr>td>a"};
-  }
-
-  @override
-  dynamic parseItemContent(Element element) {
-    String url = element.attributes['href'].trim();
-    String content = element.text.trim();
-    return {BaseSearch.ITEM_URL:url, BaseSearch.ITEM_TITLE:content};
   }
 
   @override

@@ -59,13 +59,6 @@ class BiqugeSearch extends BaseSearch{
   }
 
   @override
-  dynamic parseItemContent(Element element){
-    String url = element.attributes['href'].trim();
-    String content = element.text.trim();
-    return {BaseSearch.ITEM_URL:url, BaseSearch.ITEM_TITLE:content};
-  }
-
-  @override
   Map<String, dynamic> getContentParams(){
     return {BaseSearch.ITEM_ID: "content"};
   }

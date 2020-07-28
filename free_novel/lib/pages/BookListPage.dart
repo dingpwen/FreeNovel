@@ -17,7 +17,8 @@ class BookListPage extends StatefulWidget {
   createState() => BookListState();
 }
 
-class BookListState extends State<BookListPage> with AutomaticKeepAliveClientMixin{
+class BookListState extends State<BookListPage>
+    with AutomaticKeepAliveClientMixin {
   List<BookDesc> _books = [];
   int _curIndex = -1;
 
@@ -145,18 +146,21 @@ class BookListState extends State<BookListPage> with AutomaticKeepAliveClientMix
                       imageUrl: book.bookCover),
                 ),
                 Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(book.bookName),
-                      Text("作者：${book.author}"),
-                      Text("简介：${book.bookDesc}",
-                          maxLines: 2, overflow: TextOverflow.ellipsis),
-                      Text("最新章节：${book.lastTitle}"),
-                    ],
-                  ),
-                ),
+                    flex: 3,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          Text(book.bookName),
+                          Text("作者：${book.author}"),
+                          /*Text("简介：${book.bookDesc}",
+                          maxLines: 2, overflow: TextOverflow.ellipsis),*/
+                          Text("最新章节：${book.lastTitle}"),
+                        ],
+                      ),
+                    )),
                 Expanded(
                   child: Center(
                     child: FlatButton(

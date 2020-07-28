@@ -1,5 +1,6 @@
 import 'BaseSearch.dart';
 import 'BiqugeSearch.dart';
+import 'OtherSearch.dart';
 import 'WxcSearch.dart';
 import 'package:novel/utils/SpUtils.dart';
 
@@ -9,7 +10,7 @@ class SearchFactory{
   static const OTHER = "other";
   static const TYPE_BIQUGE = 0;
   static const TYPE_WXC = 1;
-  static const TYPE_OTHER = 3;
+  static const TYPE_OTHER = 2;
   static const TYPE_DEFAULT = 1;
   static Map<String, BaseSearch> _searchMap = {};
 
@@ -28,6 +29,8 @@ class SearchFactory{
         _searchMap[WXC] = search;
         break;
       default:
+        search = OtherSearch();
+        _searchMap[OTHER] = search;
         break;
     }
     return search;

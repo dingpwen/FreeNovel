@@ -97,7 +97,6 @@ class BookTabBarState extends State<BookTabBarPage> {
   @override
   Widget build(BuildContext context) {
     return BaseTabBarWidget(
-      title: Text(""),
       tabViews: _renderPage(),
       tabItems: _renderTab(),
       pageController: pageController,

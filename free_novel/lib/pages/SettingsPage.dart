@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:novel/pages/SearchModePage.dart';
-
+import 'RefreshSettingPage.dart';
+import 'SearchModePage.dart';
 import 'AboutPage.dart';
 
 class SettingsPage extends StatelessWidget {
-  final List<String> _settings = ["搜索设置", "其它设置", "关于本应用"];
+  final List<String> _settings = ['搜索设置', '自动更新设置', '关于本应用'];
 
   @override
   Widget build(BuildContext context) {
@@ -47,14 +47,24 @@ class SettingsPage extends StatelessWidget {
   }
 
   gotoSettingsPage(BuildContext context, int index) {
-    if(index == 0) {
-      Navigator.push(context, MaterialPageRoute(builder:(context){
-        return SearchModePage();
-      }));
-    } else if(index == 2) {
-      Navigator.push(context, MaterialPageRoute(builder:(context){
-        return AboutPage();
-      }));
+    switch(index) {
+      case 0:
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return SearchModePage();
+        }));
+        break;
+      case 1:
+        Navigator.push(context, MaterialPageRoute(builder:(context){
+          return RefreshSettingPage();
+        }));
+        break;
+      case 2:
+        Navigator.push(context, MaterialPageRoute(builder:(context){
+          return AboutPage();
+        }));
+        break;
+      default:
+        break;
     }
   }
 }

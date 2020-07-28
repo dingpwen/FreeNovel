@@ -110,7 +110,10 @@ class ContentState extends State<ContentPage>{
   }
 
   Widget _buildContent(BuildContext context) {
-    final String content = _novel.content;
+    String content = _novel.content;
+    if(!content.startsWith('<div')) {
+      content = '<div>$content</div>';
+    }
     return CustomScrollView(
       shrinkWrap: true,
 // 内容

@@ -14,6 +14,7 @@ abstract class BaseSearch {
   static const ITEM_URL = "url";
   static const ITEM_TITLE = "title";
   static const _FIRST_TITLE = '第一章';
+  static const _FIRST_TITLE2 = '第1章';
   static const _BATCH_NUM = 60;
   final _lock = new Lock();
 
@@ -60,7 +61,7 @@ abstract class BaseSearch {
     return _downloadState;
   }
 
-  downloadItem(String url, final int novelId) async {
+  Future<void> downloadItem(String url, final int novelId) async {
     if (url.isEmpty || _downloadUrls.contains(url)) {
       return;
     }
@@ -68,17 +69,17 @@ abstract class BaseSearch {
     _novelList.clear();
     _setDownloadState(0);
     print("downloadItem:$url");
-    DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) {
+    await DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) async{
       _downloadUrls.remove(url);
       //print("response:$response");
-      parseItem(response, novelId);
+      await parseItem(response, novelId);
     }, error: (errorType) {
       print("errorType:$errorType");
       _downloadUrls.remove(url);
     });
   }
 
-  List<Element> _getTargetElement(
+  List<Element> getTargetElement(
       String response, Map<String, dynamic> params) {
     var document = parse(response);
     String itemClass = params[ITEM_CLASS];
@@ -101,17 +102,24 @@ abstract class BaseSearch {
   }
 
   Map<String, dynamic> getItemParams();
-  dynamic parseItemContent(Element element);
   String getBaseUrl();
+
+  dynamic parseItemContent(Element element) {
+    String url = element.attributes['href'].trim();
+    String content = element.text.trim();
+    return {BaseSearch.ITEM_URL:url, BaseSearch.ITEM_TITLE:content};
+  }
 
   Future<dynamic> parseItem(String response, final int novelId) async {
     final itemParams = getItemParams();
-    List<Element> lists = _getTargetElement(response, itemParams);
+    List<Element> lists = getTargetElement(response, itemParams);
     List<Map<String, String>> items = [];
     items = List.generate(lists.length, (i) {
       return parseItemContent(lists[i]);
     });
     if (items.length == 0) {
+      await NovelDatabase.getInstance().deleteBook(novelId);
+      _setDownloadState(1);
       return items;
     }
     //print("Items:$items");
@@ -133,10 +141,10 @@ abstract class BaseSearch {
     }
     //查找第一章，因为有的网址可能会把最新章节放在前面
     if (pos < 0) {
-      i = items.length - 1;
+      i = 0;
       for (; i < items.length; ++i) {
         String title = items[i][ITEM_TITLE];
-        if (title.contains(_FIRST_TITLE)) {
+        if (title.contains(_FIRST_TITLE) || title.contains(_FIRST_TITLE2)) {
           pos = i;
           break;
         }
@@ -162,7 +170,7 @@ abstract class BaseSearch {
     });*/
     final element = items[pos - 1];
     await NovelDatabase.getInstance()
-        .updateBookLast(novelId, element[ITEM_URL], element[ITEM_TITLE]);
+        .updateBookLast(novelId, element[ITEM_TITLE], element[ITEM_URL]);
     if(_downloadState != 2) {
       _setDownloadState(1);
     }
@@ -181,7 +189,7 @@ abstract class BaseSearch {
     print("downloadContent:$url");
     await DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) async {
       _downloadUrls.remove(url);
-      String content = parseContentResponse(response, novelId, page);
+      String content = parseContentResponse(response, novel);
       novel.content = content;
       novel.status = 1;
       saveNovel(novel);
@@ -211,14 +219,14 @@ abstract class BaseSearch {
   Map<String, dynamic> getContentParams();
 
   dynamic parseContent(Element element) {
-    String content = element.outerHtml;
+    String content = element.innerHtml;
     return content;
   }
 
   dynamic parseContentResponse(
-      String response, final int novelId, final int page) {
+      String response, Novel novel) {
     final params = getContentParams();
-    Element element = _getTargetElement(response, params)[0];
+    Element element = getTargetElement(response, params)[0];
     if(element == null) {
       return "";
     }

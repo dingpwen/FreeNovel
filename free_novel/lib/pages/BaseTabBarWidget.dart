@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class BaseTabBarWidget extends StatefulWidget{
-  BaseTabBarWidget({this.title, this.backgroundColor, this.indicatorColor, this.pageController, this.tabItems, this.tabViews});
-  final Widget title;
+  BaseTabBarWidget({this.backgroundColor, this.indicatorColor, this.pageController, this.tabItems, this.tabViews});
   final Color backgroundColor;
   final Color indicatorColor;
   final PageController pageController;
