@@ -40,14 +40,15 @@ abstract class BaseSearch {
   }
 
   Future<dynamic> parseResult(String response);
-  int _downloadState = 0;//0:下载中 1：下载完成 2：取消下载
+  int _downloadState = 0; //0:下载中 1：下载完成 2：取消下载
   List<Novel> _novelList = [];
   int getSearchType() {
     return 0;
   }
+
   setGbk(bool isGbk) {}
 
-  cancel(){
+  cancel() {
     _setDownloadState(2);
   }
 
@@ -58,6 +59,7 @@ abstract class BaseSearch {
       _downloadState = state;
     });
   }
+
   int getDownloadState() {
     return _downloadState;
   }
@@ -70,7 +72,8 @@ abstract class BaseSearch {
     _novelList.clear();
     _setDownloadState(0);
     print("downloadItem:$url");
-    await DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) async{
+    await DioHelper.doGet(url, params: null, needGbk: needGbk(),
+        success: (response) async {
       _downloadUrls.remove(url);
       //print("response:$response");
       await parseItem(response, novelId);
@@ -80,8 +83,7 @@ abstract class BaseSearch {
     });
   }
 
-  List<Element> getTargetElement(
-      String response, Map<String, dynamic> params) {
+  List<Element> getTargetElement(String response, Map<String, dynamic> params) {
     var document = parse(response);
     String itemClass = params[ITEM_CLASS];
     if (itemClass != null && itemClass.length > 0) {
@@ -108,7 +110,7 @@ abstract class BaseSearch {
   dynamic parseItemContent(Element element) {
     String url = element.attributes['href'].trim();
     String content = element.text.trim();
-    return {BaseSearch.ITEM_URL:url, BaseSearch.ITEM_TITLE:content};
+    return {BaseSearch.ITEM_URL: url, BaseSearch.ITEM_TITLE: content};
   }
 
   Future<dynamic> parseItem(String response, final int novelId) async {
@@ -120,13 +122,15 @@ abstract class BaseSearch {
     });
     if (items.length == 0) {
       //await NovelDatabase.getInstance().deleteBook(novelId);
-      _setDownloadState(1);
+      if (_downloadUrls.isEmpty) {
+        _setDownloadState(1);
+      }
       return items;
     }
     //print("Items:$items");
     int page = 0;
     final Novel novel =
-        await NovelDatabase.getInstance().getNovelMaxPage(novelId, status:1);
+        await NovelDatabase.getInstance().getNovelMaxPage(novelId, status: 1);
     int i = 0;
     int pos = -1;
     //查找已保存的章节
@@ -172,7 +176,7 @@ abstract class BaseSearch {
     final element = items[pos - 1];
     await NovelDatabase.getInstance()
         .updateBookLast(novelId, element[ITEM_TITLE], element[ITEM_URL]);
-    if(_downloadState != 2) {
+    if (_downloadState != 2) {
       _setDownloadState(1);
     }
     return items;
@@ -188,7 +192,8 @@ abstract class BaseSearch {
         Novel(id: novelId, page: page, title: title, content: "", url: url);
     _downloadUrls.add(url);
     print("downloadContent:$url");
-    await DioHelper.doGet(url, params: null, needGbk: needGbk(), success: (response) async {
+    await DioHelper.doGet(url, params: null, needGbk: needGbk(),
+        success: (response) async {
       _downloadUrls.remove(url);
       String content = parseContentResponse(response, novel);
       novel.content = content;
@@ -197,7 +202,6 @@ abstract class BaseSearch {
       if (complete != null) {
         complete(content);
       }
-
     }, error: (errorType) {
       _downloadUrls.remove(url);
       if (fail != null) {
@@ -207,10 +211,10 @@ abstract class BaseSearch {
     });
   }
 
-  void saveNovel(Novel novel) async{
+  void saveNovel(Novel novel) async {
     await _lock.synchronized(() async {
       _novelList.add(novel);
-      if(_novelList.length >= _BATCH_NUM || _downloadUrls.isEmpty){
+      if (_novelList.length >= _BATCH_NUM || _downloadUrls.isEmpty) {
         await NovelDatabase.getInstance().insertNovels(_novelList);
         _novelList.clear();
       }
@@ -224,11 +228,10 @@ abstract class BaseSearch {
     return content;
   }
 
-  dynamic parseContentResponse(
-      String response, Novel novel) {
+  dynamic parseContentResponse(String response, Novel novel) {
     final params = getContentParams();
     Element element = getTargetElement(response, params)[0];
-    if(element == null) {
+    if (element == null) {
       return "";
     }
     dynamic content = parseContent(element);
