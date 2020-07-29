@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -29,6 +31,7 @@ class ContentState extends State<ContentPage>{
   int page;
   int maxPage = -1;
   Novel _novel;
+  ScrollController _controller = ScrollController();
 
   @override
   void initState() {
@@ -52,16 +55,17 @@ class ContentState extends State<ContentPage>{
     //print("content:$content");
     if (novel != null && novel.status == 0) {
       assert(novel.url.isNotEmpty);
-      SearchFactory.getDefault().then((search) => {
-            search.downloadContent(novel.url, novel.id, novel.page, novel.title,
-                complete: (content) {
-              novel.content = content;
-              SpUtils.savePage(_id, page);
-              setState(() {
-                _novel = novel;
-                //_content = content;//.replaceAll("<br><br>", "\n");
-              });
-            })
+      final book = await NovelDatabase.getInstance().findBookFromId(_id);
+      final search = SearchFactory.getSearchByType(book.search);
+      search.setGbk(book.gbk == 1);
+      search.downloadContent(novel.url, novel.id, novel.page, novel.title,
+          complete: (content) {
+            novel.content = content;
+            SpUtils.savePage(_id, page);
+            setState(() {
+              _novel = novel;
+              //_content = content;//.replaceAll("<br><br>", "\n");
+            });
           });
     } else {
       SpUtils.savePage(_id, page);
@@ -116,6 +120,7 @@ class ContentState extends State<ContentPage>{
     }
     return CustomScrollView(
       shrinkWrap: true,
+      controller: _controller,
 // 内容
       slivers: <Widget>[
         new SliverPadding(
@@ -151,6 +156,7 @@ class ContentState extends State<ContentPage>{
     if (page != maxPage) {
       page++;
     }
+    _controller.animateTo(0, duration: Duration(milliseconds: 100), curve: Curves.linear);
     loadContent();
   }
 }

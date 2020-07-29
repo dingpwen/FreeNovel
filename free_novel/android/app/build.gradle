@@ -39,6 +39,14 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
+    signingConfigs{
+        release{
+            storeFile file("D:\\Android\\signed\\sign-app.jks")
+            storePassword "mypassword"
+            keyAlias "key_walk"
+            keyPassword "mypassword"
+        }
+    }
 
     buildTypes {
         release {

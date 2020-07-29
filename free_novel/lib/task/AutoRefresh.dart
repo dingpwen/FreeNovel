@@ -20,6 +20,7 @@ class AutoRefresh{
     } else {
       bookList.forEach((book) async{
         BaseSearch search = SearchFactory.getSearchByType(book.search);
+        search.setGbk(book.gbk == 1);
         if(search != null) {
           await search.downloadItem(book.bookUrl, book.id);
         }

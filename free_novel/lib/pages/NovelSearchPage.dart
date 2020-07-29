@@ -233,6 +233,10 @@ class NovelSearchState extends State<NovelSearchPage> {
   }
 
   doSearch() async {
+    if (_curUrl != null && _downloadItems[_curUrl] == 0) {
+      Toast.show(context, "您有其它任务在下载中！", duration: 2);
+      return;
+    }
     onSearchResult("");
     _downloadItems.clear();
     print("Search for ${_textController.text}");

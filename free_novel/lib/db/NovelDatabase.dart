@@ -21,7 +21,7 @@ class NovelDatabase {
       join(await getDatabasesPath(), 'novel_database.db'),
       onCreate: (db, version) {
         db.execute(
-            "CREATE TABLE books(id INTEGER PRIMARY KEY AUTOINCREMENT, bookName TEXT, bookUrl TEXT, author TEXT, lastUrl  TEXT, lastTitle TEXT, type TEXT, bookCover TEXT, bookDesc TEXT, status INTEGER DEFAULT(0), search status INTEGER DEFAULT(0))");
+            "CREATE TABLE books(id INTEGER PRIMARY KEY AUTOINCREMENT, bookName TEXT, bookUrl TEXT, author TEXT, lastUrl  TEXT, lastTitle TEXT, type TEXT, bookCover TEXT, bookDesc TEXT, status INTEGER DEFAULT(0), search INTEGER DEFAULT(0), gbk INTEGER DEFAULT(0))");
         db.execute(
             "CREATE TABLE novel(id INTEGER, page INTEGER, title TEXT, content TEXT, url TEXT, status INTEGER DEFAULT(0), PRIMARY KEY(id,page))");
         db.execute(
@@ -195,11 +195,11 @@ class NovelDatabase {
   }
 
   Future<dynamic> updateBookContent(
-      int id, String name, String author) async {
+      int id, String name, String author, int gbk) async {
     final Database db = await database;
     return db.update(
       'books',
-      {'bookName': name, 'author': author},
+      {'bookName': name, 'author': author, 'gbk':gbk},
       where: 'id=?',
       whereArgs: [id],
       conflictAlgorithm: ConflictAlgorithm.replace,

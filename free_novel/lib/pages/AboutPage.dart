@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'LawPage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatelessWidget {
   static const _address = "wenpd8@foxmail.com";
+  final platform = const MethodChannel("org.wen.icude/my");
   static const _footerStyle = TextStyle(
       fontSize: 18,
       color: Colors.green,
@@ -62,19 +65,29 @@ class AboutPage extends StatelessWidget {
       children: <Widget>[
         GestureDetector(
           child: Text("打 赏", style: _footerStyle),
-          onTap: () => sendEmail(),
+          onTap: () => _gotoPay(),
         ),
         GestureDetector(
           child: Text("法律意见", style: _footerStyle),
-          onTap: () => sendEmail(),
+          onTap: () => _gotoLaw(context),
         ),
         GestureDetector(
           child: Text("问题反馈", style: _footerStyle),
-          onTap: () => sendEmail(),
+          onTap: () => _sendEmail(),
         )
       ],
     );
   }
 
-  void sendEmail({String email = _address}) => launch("mailto:$email");
+  void _sendEmail({String email = _address}) => launch("mailto:$email");
+
+  void _gotoLaw(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder:(context){
+      return LawPage();
+    }));
+  }
+
+  void _gotoPay() async{
+    await platform.invokeMethod('ailpay');
+  }
 }

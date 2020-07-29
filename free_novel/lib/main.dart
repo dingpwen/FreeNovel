@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.blueGrey,
+        primarySwatch: Colors.green,
         // This makes the visual density adapt to the platform that you run
         // the app on. For desktop platforms, the controls will be smaller and
         // closer together (more dense) than on mobile platforms.
@@ -100,7 +100,7 @@ class BookTabBarState extends State<BookTabBarPage> {
       tabViews: _renderPage(),
       tabItems: _renderTab(),
       pageController: pageController,
-      backgroundColor: Colors.blue,
+      backgroundColor: Colors.greenAccent,
       indicatorColor: Colors.white,
     );
   }

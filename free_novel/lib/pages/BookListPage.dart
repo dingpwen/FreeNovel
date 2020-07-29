@@ -256,7 +256,13 @@ class BookListState extends State<BookListPage>
     if("other" == search) {
       Navigator.push(context, MaterialPageRoute(builder: (context) {
         return DownloadPage();
-      }));
+      })).then((value){
+        int refresh = value[0];
+        print("refresh:$refresh");
+        if (refresh == 1) {
+          loadData();
+        }
+      });
       return;
     }
     Navigator.of(context).pushNamed(searchRoute).then((value) {

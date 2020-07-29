@@ -20,7 +20,7 @@ class DownloadState extends State<DownloadPage> {
   final _textController = TextEditingController();
   TextStyle _common = TextStyle(fontSize: 18);
   TextStyle _blue = TextStyle(fontSize: 18, color: Colors.blue);
-  bool _newValue = false;
+  //bool _newValue = false;
   String _curUrl;
   Timer _timer;
   int _refresh = 0;
@@ -35,8 +35,9 @@ class DownloadState extends State<DownloadPage> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () {
-        return goBack();
+      onWillPop: () async{
+        await goBack();
+        return false;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -57,7 +58,7 @@ class DownloadState extends State<DownloadPage> {
           child: Column(
             children: <Widget>[
               Padding(
-                padding: EdgeInsets.fromLTRB(10.0, 20, 10, 0),
+                padding: EdgeInsets.fromLTRB(10.0, 20, 10, 10),
                 child: Row(
                   children: <Widget>[
                     Expanded(
@@ -84,7 +85,7 @@ class DownloadState extends State<DownloadPage> {
                   ],
                 ),
               ),
-              Padding(
+              /*Padding(
                 padding: EdgeInsets.fromLTRB(10.0, 0, 10, 0),
                 child: CheckboxListTile(
                   activeColor: Colors.blue,
@@ -96,7 +97,7 @@ class DownloadState extends State<DownloadPage> {
                     });
                   },
                 ),
-              )
+              )*/
             ],
           ),
         ),
@@ -131,18 +132,20 @@ class DownloadState extends State<DownloadPage> {
     }
     _refresh = 1;
     String url = _textController.text;
-    _search.setGbk(_newValue);
+    //_search.setGbk(_newValue);
     if(url.isNotEmpty) {
       setState(() {
         _curUrl = url;
       });
       final book = await NovelDatabase.getInstance().findBookFromUrl(url);
       if(book != null) {
+        _search.setGbk(book.gbk == 1);
         _search.downloadItem(url, book.id);
       } else {
         BookDesc book = BookDesc('', url, '', '',
             '', '', '', '');
         book.search = SearchFactory.TYPE_OTHER;
+        //book.gbk = _newValue?1:0;
         int id = await NovelDatabase.getInstance().insertBook(book);
         _search.downloadItem(url, id);
       }

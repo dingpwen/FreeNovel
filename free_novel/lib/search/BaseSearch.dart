@@ -45,6 +45,7 @@ abstract class BaseSearch {
   int getSearchType() {
     return 0;
   }
+  setGbk(bool isGbk) {}
 
   cancel(){
     _setDownloadState(2);
@@ -118,7 +119,7 @@ abstract class BaseSearch {
       return parseItemContent(lists[i]);
     });
     if (items.length == 0) {
-      await NovelDatabase.getInstance().deleteBook(novelId);
+      //await NovelDatabase.getInstance().deleteBook(novelId);
       _setDownloadState(1);
       return items;
     }

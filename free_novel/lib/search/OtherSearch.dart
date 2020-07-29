@@ -58,15 +58,23 @@ class OtherSearch extends BaseSearch{
       return _getTargetElement(response);
     }
     var document = parse(response);
-    if(document.head.innerHtml.contains('charset=gbk')){
-      _isGbk = true;
+    String headStr = document.head.innerHtml.toLowerCase();
+    bool  gbk = false;
+    if(headStr.contains('charset=gbk') ||
+        headStr.contains('charset=gb2312')){
+      gbk = true;
       //response = Utf8Decoder(allowMalformed: true).convert(response.codeUnits);
       //document = parse(response);
+    }
+    if(_isGbk != gbk && (_book != null)) {
+      _isGbk = gbk;
+      downloadItem(_book.bookUrl, _book.id);
+      return [];
     }
     print('response:${response.substring(0,800)}');
     String title = document.head.querySelector('title').text.trim();
     int start = title.indexOf('(');
-    int endPos = title.indexOf('×îÐÂ');
+    int endPos = title.indexOf('æœ€æ–°');
     if(endPos > start && start > 0) {
       endPos = start;
     }
@@ -75,12 +83,12 @@ class OtherSearch extends BaseSearch{
     print("name:$name author:$author");
     if(_book != null) {
       NovelDatabase.getInstance().updateBookContent(
-          _book.id, name, author);
+          _book.id, name, author, _isGbk?1:0);
     }
 
-    int pos = response.indexOf('µÚÒ»ÕÂ');
+    int pos = response.indexOf('ç¬¬ä¸€ç« ');
     if(pos < 0) {
-      pos = response.indexOf('µÚ1ÕÂ');
+      pos = response.indexOf('ç¬¬1ç« ');
       if(pos< 0) {
         return [];
       }
@@ -114,9 +122,9 @@ class OtherSearch extends BaseSearch{
 
   String _findPath(Element element) {
     String inner = element.innerHtml;
-    int pos = inner.indexOf('µÚÒ»ÕÂ');
+    int pos = inner.indexOf('ç¬¬ä¸€ç« ');
     if(pos<0) {
-      pos = inner.indexOf('µÚ1ÕÂ');
+      pos = inner.indexOf('ç¬¬1ç« ');
     }
     int endMark = 0;
     String path = '';
@@ -157,7 +165,7 @@ class OtherSearch extends BaseSearch{
       return [document.body];
     }
     String sub = inner.substring(pos);
-    pos = sub.indexOf('id=');
+    pos = sub.indexOf('id=\"');
     sub = sub.substring(pos + 4);
     pos = sub.indexOf('\"');
     String cid = sub.substring(0, pos);

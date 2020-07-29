@@ -1,19 +1,16 @@
 package com.wen.novel;
 
-import android.content.Context;
+import android.app.Activity;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import io.flutter.Log;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.Character.UnicodeBlock;
-import java.util.*;
-import java.net.URLDecoder;
 /**
  * author: dingp
  * created on: 2020/6/24 13:45
@@ -21,13 +18,13 @@ import java.net.URLDecoder;
  */
 public class MyMethodChannel implements MethodChannel.MethodCallHandler {
     private static final String CHANNEL_NAME = "org.wen.icude/my";
-    private Context mContext;
-    private MyMethodChannel(Context context, FlutterEngine engine) {
-        mContext = context;
+    private Activity mActivity;
+    private MyMethodChannel(Activity activity, FlutterEngine engine) {
+        mActivity = activity;
         new MethodChannel(engine.getDartExecutor(), CHANNEL_NAME).setMethodCallHandler(this);
     }
 
-    public static void register(FlutterActivity flutterActivity, FlutterEngine engine) {
+    static void register(FlutterActivity flutterActivity, FlutterEngine engine) {
         new MyMethodChannel(flutterActivity, engine);
     }
 
@@ -38,44 +35,35 @@ public class MyMethodChannel implements MethodChannel.MethodCallHandler {
         switch (call.method) {
             case "gbk":
                 content = call.argument("content");
+                if(content == null) {
+                    return;
+                }
                 try{
                     String gbk = toGBK(content);
                     android.util.Log.d("wenpd", "gbk:" + gbk);
                     result.success(gbk);
                 } catch(UnsupportedEncodingException e) {
-
+                    e.printStackTrace();
                 }
                 break;
-            case "utf8":
-                content = call.argument("content");
-                try{
-                    String utf8 = new String(content.getBytes("GBK"), "UTF_8");
-                    android.util.Log.d("wenpd", "utf8:" + utf8);
-                    result.success(utf8);
-                } catch(UnsupportedEncodingException e) {
-
+            case "ailpay":
+                if (AlipayUtil.hasInstalledAlipayClient(mActivity)){
+                    AlipayUtil.startAlipayClient(mActivity,"fkx06116xmcuh8wn2ef9321"); // 第二步获取到的字符串
+                }else{
+                    Toast.makeText(mActivity, "未检测到支付宝，无法实现打赏功能", Toast.LENGTH_SHORT).show();
                 }
-                break;
-            case "decode":
-                String url = call.argument("url");
-                try {
-                    String utf8 = URLDecoder.decode(url, "gbk");
-                    android.util.Log.d("wenpd", "utf8:" + utf8);
-                    result.success(utf8);
-                } catch(UnsupportedEncodingException e) {
-
-                }
+                result.success("ok");
                 break;
             default:
                 result.notImplemented();
         }
     }
 
-    public static String toGBK(String source) throws UnsupportedEncodingException {
+    private static String toGBK(String source) throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
         byte[] bytes = source.getBytes("GBK");
         for(byte b : bytes) {
-            sb.append("%" + Integer.toHexString((b & 0xff)).toUpperCase());
+            sb.append("%").append(Integer.toHexString((b & 0xff)).toUpperCase());
         }
 
         return sb.toString();
