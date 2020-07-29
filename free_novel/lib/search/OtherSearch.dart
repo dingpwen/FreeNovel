@@ -75,6 +75,9 @@ class OtherSearch extends BaseSearch{
     String title = document.head.querySelector('title').text.trim();
     int start = title.indexOf('(');
     int endPos = title.indexOf('最新');
+    if(endPos < 0) {
+      endPos = title.indexOf('章节');
+    }
     if(endPos > start && start > 0) {
       endPos = start;
     }
@@ -102,7 +105,15 @@ class OtherSearch extends BaseSearch{
     Element pElement = document.getElementById(pid);
     final List<Element> elementList =  pElement.querySelectorAll(_findPath(pElement));
     if(elementList != null && elementList.length > 0){
-      final itemContent = parseItemContent(elementList[0]);
+      pos = 0;
+      while(pos < elementList.length) {
+        if(elementList[pos].innerHtml.contains('第一章') ||
+            elementList[pos].innerHtml.contains('第1章')) {
+          break;
+        }
+        ++pos;
+      }
+      final itemContent = parseItemContent(elementList[pos]);
       String url = itemContent[BaseSearch.ITEM_URL];
       endPos = url.lastIndexOf('/');
       if(_book != null) {
@@ -130,7 +141,10 @@ class OtherSearch extends BaseSearch{
     String path = '';
     while(pos > 0) {
       if(inner[pos] == '<') {
-        if(inner[pos + 1] == '/'){
+        if(inner[pos + 1] == '!') {
+          --pos;
+          continue;
+        } else if(inner[pos + 1] == '/'){
           ++endMark;
         } else if(endMark > 0) {
           --endMark;
@@ -164,12 +178,22 @@ class OtherSearch extends BaseSearch{
     if(pos<0) {
       return [document.body];
     }
+    Element element;
     String sub = inner.substring(pos);
-    pos = sub.indexOf('id=\"');
-    sub = sub.substring(pos + 4);
-    pos = sub.indexOf('\"');
-    String cid = sub.substring(0, pos);
-    return [document.getElementById(cid)];
+    while(true) {
+      pos = sub.indexOf('id=\"');
+      if(pos < 0) {
+        break;
+      }
+      sub = sub.substring(pos + 4);
+      pos = sub.indexOf('\"');
+      String cid = sub.substring(0, pos);
+      element = document.getElementById(cid);
+      if(element.text != null && element.text.length > 200) {
+        break;
+      }
+    }
+    return [element];
   }
 
   @override

@@ -147,6 +147,7 @@ class DownloadState extends State<DownloadPage> {
         book.search = SearchFactory.TYPE_OTHER;
         //book.gbk = _newValue?1:0;
         int id = await NovelDatabase.getInstance().insertBook(book);
+        _search.setGbk(false);
         _search.downloadItem(url, id);
       }
     }

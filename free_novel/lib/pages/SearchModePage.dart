@@ -148,7 +148,7 @@ class SearchModeState extends State<SearchModePage> {
   Widget _buildOtherSearch(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-      child: Text("输入小说章节列表所在网址，直接下载整本小说，目前只支持utf-8/gbk/gb2312等编码格式网页下载，其它编码的网页下载到的内容可能是乱码。同时，目前只支持静态网页下载。", style: _subTitle),
+      child: Text("输入小说章节列表所在网址(最好是电脑版的网址)，直接下载整本小说，目前只支持utf-8/gbk/gb2312等编码格式网页下载，其它编码的网页下载到的内容可能是乱码。同时，目前只支持静态网页下载。", style: _subTitle),
     );
   }
 

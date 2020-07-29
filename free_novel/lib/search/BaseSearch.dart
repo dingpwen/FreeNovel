@@ -80,6 +80,7 @@ abstract class BaseSearch {
     }, error: (errorType) {
       print("errorType:$errorType");
       _downloadUrls.remove(url);
+      _setDownloadState(1);
     });
   }
 
