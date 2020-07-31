@@ -75,7 +75,7 @@ abstract class BaseSearch {
     await DioHelper.doGet(url, params: null, needGbk: needGbk(),
         success: (response) async {
       _downloadUrls.remove(url);
-      //print("response:$response");
+      //print("flutter response:$response");
       await parseItem(response, novelId);
     }, error: (errorType) {
       print("errorType:$errorType");

@@ -278,9 +278,10 @@ class NovelSearchState extends State<NovelSearchPage> {
       //showToast();
       id = exist.id;
     } else {
+      book.search = _search.getSearchType();
+      book.gbk = _search.needGbk()?1:0;
       id = await NovelDatabase.getInstance().insertBook(book);
     }
-    book.search = _search.getSearchType();
     refresh = 1;
     _downloadItems[book.bookUrl] = 0;
     setState(() {
