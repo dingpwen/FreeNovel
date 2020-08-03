@@ -45,7 +45,7 @@ class AboutPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           new Image.asset(
-            "lib/images/nopage.jpg",
+            "lib/images/ic_launcher.png",
             width: 240,
             height: 240.0,
             //类似于Android的scaleType 此处让图片尽可能小 以覆盖整个widget
@@ -68,7 +68,7 @@ class AboutPage extends StatelessWidget {
           onTap: () => _gotoPay(),
         ),
         GestureDetector(
-          child: Text("法律意见", style: _footerStyle),
+          child: Text("法律声明", style: _footerStyle),
           onTap: () => _gotoLaw(context),
         ),
         GestureDetector(

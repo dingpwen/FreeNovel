@@ -153,7 +153,7 @@ class DownloadState extends State<DownloadPage> {
     }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_search.getDownloadState() == 1) {
+      if (_search.getDownloadState() != 0) {
         onComplete();
       }
     });

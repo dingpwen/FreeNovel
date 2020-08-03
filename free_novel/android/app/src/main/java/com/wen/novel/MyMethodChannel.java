@@ -48,9 +48,9 @@ public class MyMethodChannel implements MethodChannel.MethodCallHandler {
                 break;
             case "ailpay":
                 if (AlipayUtil.hasInstalledAlipayClient(mActivity)){
-                    AlipayUtil.startAlipayClient(mActivity,"fkx06116xmcuh8wn2ef9321"); // 第二步获取到的字符串
+                    AlipayUtil.startAlipayClient(mActivity,"fkx06116xmcuh8wn2ef9321"); // 绗簩姝ヨ幏鍙栧埌鐨勫瓧绗︿覆
                 }else{
-                    Toast.makeText(mActivity, "未检测到支付宝，无法实现打赏功能", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity, "鏈娴嬪埌鏀粯瀹濓紝鏃犳硶瀹炵幇鎵撹祻鍔熻兘", Toast.LENGTH_SHORT).show();
                 }
                 result.success("ok");
                 break;

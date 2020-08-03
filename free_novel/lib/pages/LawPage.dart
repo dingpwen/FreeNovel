@@ -9,7 +9,7 @@ class LawPage extends StatelessWidget{
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('法律意见'),
+        title: Text('法律声明'),
         centerTitle: true,
       ),
       body: Container(

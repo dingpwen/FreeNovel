@@ -20,7 +20,7 @@ abstract class BaseSearch {
 
   dynamic getParams(String query);
   String getSearchUrl();
-  static List<String> _downloadUrls = [];
+  List<String> _downloadUrls = [];
   String getMethod() {
     return 'GET';
   }
@@ -40,7 +40,7 @@ abstract class BaseSearch {
   }
 
   Future<dynamic> parseResult(String response);
-  int _downloadState = 0; //0:下载中 1：下载完成 2：取消下载
+  int _downloadState = -1; //-1：初始状态 0:下载中 1：下载完成 2：取消下载/下载失败
   List<Novel> _novelList = [];
   int getSearchType() {
     return 0;
@@ -65,7 +65,7 @@ abstract class BaseSearch {
   }
 
   Future<void> downloadItem(String url, final int novelId) async {
-    if (url.isEmpty || _downloadUrls.contains(url)) {
+    if (url.isEmpty || _downloadUrls.contains(url) || _downloadState == 0) {
       return;
     }
     _downloadUrls.add(url);
@@ -80,7 +80,7 @@ abstract class BaseSearch {
     }, error: (errorType) {
       print("errorType:$errorType");
       _downloadUrls.remove(url);
-      _setDownloadState(1);
+      _setDownloadState(2);
     });
   }
 

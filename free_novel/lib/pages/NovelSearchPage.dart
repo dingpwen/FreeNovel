@@ -267,7 +267,7 @@ class NovelSearchState extends State<NovelSearchPage> {
 
   downloadItem(BookDesc book) async {
     //compute(download, [_search, item.bookUrl]);
-    if (_curUrl != null && _downloadItems[_curUrl] == 0) {
+    if (_curUrl != null && _search.getDownloadState() == 0) {
       Toast.show(context, "您有其它任务在下载中！", duration: 2);
       return;
     }
@@ -290,14 +290,14 @@ class NovelSearchState extends State<NovelSearchPage> {
     _search.downloadItem(book.bookUrl, id);
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_search.getDownloadState() == 1) {
+      if (_search.getDownloadState() != 0) {
         onComplete();
       }
     });
   }
 
   onComplete() {
-    _downloadItems[_curUrl] = 1;
+    _downloadItems[_curUrl] = _search.getDownloadState();
     _timer.cancel();
     _timer = null;
     setState(() {
@@ -309,10 +309,6 @@ class NovelSearchState extends State<NovelSearchPage> {
     showConfirmDialog(context, '取消任务', '确定要取消下载 ${book.bookName} 吗？',
         callback: () {
       _search.cancel();
-      _downloadItems[book.bookUrl] = 2;
-      setState(() {
-        _curUrl = null;
-      });
     });
   }
 
